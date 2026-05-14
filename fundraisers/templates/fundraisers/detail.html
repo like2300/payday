@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ fundraiser.title }} | PayDay{% endblock %}
+
+{% block meta_description %}{{ fundraiser.description|truncatewords:20 }}{% endblock %}
+{% block og_title %}{{ fundraiser.title }} | Soutenez cette collecte sur PayDay{% endblock %}
+{% block og_description %}Aidez {{ fundraiser.beneficiary_name }} à atteindre son objectif de {{ fundraiser.target_amount|floatformat:0 }} FCFA.{% endblock %}
+{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{{ fundraiser.background_media.url }}{% endblock %}
+
+{% block body_class %}overflow-hidden{% endblock %}
+
+{% block extra_css %}
+    .glass {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    .apple-gradient-text {
+        background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    @keyframes subtle-zoom {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.1); }
+    }
+    .bg-media {
+        animation: subtle-zoom 20s infinite alternate linear;
+    }
+    .modal-enter {
+        animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slide-up {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+{% endblock %}
+
+{% block header_content %}
+<div class="flex justify-center flex-1">
+    <h2 class="text-white/40 font-semibold tracking-widest text-xs uppercase">Détails de la collecte</h2>
+</div>
+{% endblock %}
+
+{% block content %}
+    <!-- Background Media -->
+    <div class="fixed inset-0 -z-10 bg-black">
+        {% if fundraiser.media_type == 'video' %}
+            <video autoplay muted loop playsinline class="w-full h-full object-cover bg-media opacity-60">
+                <source src="{{ fundraiser.background_media.url }}" type="video/mp4">
+            </video>
+        {% else %}
+            <img src="{{ fundraiser.background_media.url }}" class="w-full h-full object-cover bg-media opacity-60" alt="Background">
+        {% endif %}
+        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="h-[calc(100vh-120px)] flex flex-col items-center justify-center text-center">
+        <!-- Glass Card -->
+        <div class="glass w-full max-w-lg rounded-[40px] p-8 md:p-12 space-y-8 animate-fadeIn">
+            
+            <div class="space-y-2">
+                <h1 class="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+                    {{ fundraiser.title }}
+                </h1>
+                <p class="text-white/60 text-lg font-medium">Pour {{ fundraiser.beneficiary_name }}</p>
+            </div>
+
+            <!-- Progress -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-end">
+                    <div class="text-left">
+                        <p class="text-white/40 text-sm uppercase tracking-wider font-bold">Collecté</p>
+                        <p class="text-3xl font-bold text-white">{{ fundraiser.collected_amount|floatformat:0 }} <span class="text-lg font-medium opacity-60">FCFA</span></p>
+                    </div>
+                    {% if fundraiser.target_amount %}
+                    <div class="text-right">
+                        <p class="text-white/40 text-sm uppercase tracking-wider font-bold">Objectif</p>
+                        <p class="text-xl font-semibold text-white/80">{{ fundraiser.target_amount|floatformat:0 }} FCFA</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if fundraiser.target_amount %}
+                <div class="h-3 w-full bg-white/10 rounded-full overflow-hidden">
+                    <div id="progress-bar" 
+                         class="h-full bg-white transition-all duration-1000 ease-out" 
+                         style="width: {{ fundraiser.get_progress_percentage }}%"></div>
+                </div>
+                <p class="text-white/40 text-xs font-bold text-right">{{ fundraiser.get_progress_percentage|floatformat:1 }}% complété</p>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <p class="text-white/80 text-base leading-relaxed max-w-sm mx-auto">
+                {{ fundraiser.description }}
+            </p>
+
+            <!-- CTA Buttons -->
+            <div class="space-y-3">
+                {% if fundraiser.is_closed %}
+                <div class="w-full py-5 rounded-3xl bg-red-600/20 border border-red-600/30 text-red-500 font-bold text-xl cursor-not-allowed">
+                    🚫 Collecte Clôturée
+                </div>
+                <p class="text-white/40 text-xs font-medium italic">L'objectif a été atteint. Merci à tous les donateurs !</p>
+                {% else %}
+                <button onclick="openModal('donation-modal')" 
+                        style="background-color: {{ fundraiser.button_color }};"
+                        class="w-full py-5 rounded-3xl text-white font-bold text-xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
+                    {{ fundraiser.button_text }}
+                </button>
+                {% endif %}
+                
+                <button onclick="openModal('donors-modal')" 
+                        class="w-full py-4 rounded-3xl bg-white/5 border border-white/10 text-white font-semibold text-sm transition-all duration-300 hover:bg-white/10">
+                    Voir les donateurs
+                </button>
+            </div>
+
+            <!-- Footer Stats -->
+            <div class="flex justify-center gap-12 pt-4">
+                <div>
+                    <p class="text-white font-bold text-xl">{{ fundraiser.completed_transactions_count }}</p>
+                    <p class="text-white/30 text-[10px] uppercase font-bold tracking-widest">Donations</p>
+                </div>
+                <div>
+                    <p class="text-white font-bold text-xl">{{ fundraiser.created_at|timesince }}</p>
+                    <p class="text-white/30 text-[10px] uppercase font-bold tracking-widest">Temps écoulé</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Modal -->
+    <div id="donation-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeModal('donation-modal')"></div>
+        
+        <div class="glass relative w-full max-w-md rounded-[32px] p-8 modal-enter">
+            <h3 class="text-2xl font-bold text-white mb-6 text-left">Faire un don 🎁</h3>
+            
+            <form id="payment-form" class="space-y-5">
+                {% csrf_token %}
+                <input type="hidden" name="fundraiser_id" value="{{ fundraiser.id }}">
+                
+                <div>
+                    <label class="block text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2 text-left">Montant (FCFA)</label>
+                    <input type="number" name="amount" required min="100" placeholder="Min: {{ fundraiser.min_donation_amount|floatformat:0 }}"
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-xl font-bold focus:outline-none focus:border-white/30">
+                </div>
+
+                <div>
+                    <label class="block text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2 text-left">Opérateur (Optionnel)</label>
+                    <select name="provider" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-white/30">
+                        <option value="MTM">MTN MoMo</option>
+                        <option value="AIRTEL">Airtel Money</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2 text-left">Votre Nom (Optionnel)</label>
+                    <input type="text" name="donor_name" placeholder="Anonyme"
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-white/30">
+                </div>
+
+                <button type="submit" id="submit-btn"
+                        class="w-full py-5 bg-white text-black font-bold rounded-2xl text-lg hover:bg-gray-100 transition-colors">
+                    Confirmer le don
+                </button>
+
+                <button type="button" onclick="closeModal('donation-modal')"
+                        class="w-full py-2 text-white/30 hover:text-white/60 text-sm font-medium transition-colors">
+                    Annuler la transaction
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Donors Modal -->
+    <div id="donors-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeModal('donors-modal')"></div>
+        
+        <div class="glass relative w-full max-w-md rounded-[32px] p-8 modal-enter flex flex-col max-h-[80vh]">
+            <h3 class="text-2xl font-bold text-white mb-6 text-left">Donateurs</h3>
+            
+            <div class="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                {% for txn in transactions %}
+                    <div class="flex justify-between items-center p-4 bg-white/5 border border-white/10 rounded-2xl">
+                        <div class="text-left">
+                            <p class="text-white font-bold">{{ txn.donor_name|default:"Anonyme" }}</p>
+                            <p class="text-white/40 text-[10px]">{{ txn.created_at|date:"d M Y, H:i" }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-white font-bold">{{ txn.amount|floatformat:0 }} FCFA</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="py-12 text-center space-y-3">
+                        <div class="text-4xl">🎁</div>
+                        <p class="text-white font-medium">Aucun don pour le moment</p>
+                        <p class="text-white/40 text-sm px-8">Soyez le premier à participer à cette collecte !</p>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <button onclick="closeModal('donors-modal')" class="mt-6 w-full py-4 bg-white/10 text-white font-bold rounded-2xl hover:bg-white/20 transition-colors">
+                Fermer
+            </button>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Airtel Availability Check
+        document.querySelector('select[name="provider"]').addEventListener('change', function() {
+            if (this.value === 'AIRTEL') {
+                alert("Airtel Money sera prochainement disponible. Veuillez utiliser MTN MoMo pour le moment. 😊");
+                this.value = 'MTN';
+            }
+        });
+
+        document.getElementById('payment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerText = 'Traitement...';
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            try {
+                const response = await fetch('{% url "api_initiate_payment" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = result.payment_link;
+                } else {
+                    alert('Erreur: ' + (result.error || 'Une erreur est survenue'));
+                    btn.disabled = false;
+                    btn.innerText = 'Confirmer le don';
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Erreur de connexion au serveur');
+                btn.disabled = false;
+                btn.innerText = 'Confirmer le don';
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Merci ! | PayDay{% endblock %}
+
+{% block body_class %}h-screen flex items-center justify-center overflow-hidden{% endblock %}
+
+{% block extra_css %}
+    .glass {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    @keyframes slide-up {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up {
+        animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+{% endblock %}
+
+{% block header_content %}
+<div class="flex justify-center flex-1">
+    <h2 class="text-white/40 font-semibold tracking-widest text-xs uppercase">Paiement réussi</h2>
+</div>
+{% endblock %}
+
+{% block content %}
+    <div class="fixed inset-0 -z-10 bg-black">
+        <div class="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-black to-black"></div>
+    </div>
+
+    <div class="w-full max-w-lg mx-auto text-center">
+        <div class="glass rounded-[40px] p-12 space-y-8 animate-slide-up">
+            <div class="space-y-4">
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h1 class="text-4xl font-bold text-white tracking-tight">Merci beaucoup !</h1>
+                <p class="text-white/60 text-lg">Votre participation a bien été enregistrée. Vous contribuez à rendre ce moment inoubliable.</p>
+            </div>
+
+            <div class="pt-4">
+                {% if fundraiser_slug %}
+                <a href="{% url 'fundraiser_detail' fundraiser_slug %}" class="inline-block w-full py-4 px-8 bg-white text-black font-bold rounded-2xl hover:bg-white/90 transition-all duration-300">
+                    Retour à la collecte
+                </a>
+                {% else %}
+                <a href="{% url 'fundraiser_list' %}" class="inline-block w-full py-4 px-8 bg-white text-black font-bold rounded-2xl hover:bg-white/90 transition-all duration-300">
+                    Retour à l'accueil
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const duration = 5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+              const timeLeft = animationEnd - Date.now();
+
+              if (timeLeft <= 0) {
+                return clearInterval(interval);
+              }
+
+              const particleCount = 50 * (timeLeft / duration);
+              // since particles fall down, start a bit higher than average
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+            
+            // Initial burst
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        });
+    </script>
+{% endblock %}

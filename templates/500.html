@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Erreur Serveur | PayDay{% endblock %}
+
+{% block header_content %}
+<div class="flex justify-center flex-1">
+    <h2 class="text-white/40 font-semibold tracking-widest text-xs uppercase">Erreur 500</h2>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="h-[calc(100vh-200px)] flex flex-col items-center justify-center text-center space-y-8">
+    <div class="glass p-12 rounded-[40px] max-w-lg space-y-6">
+        <h1 class="text-8xl font-bold text-white opacity-20">500</h1>
+        <div class="space-y-2">
+            <h2 class="text-2xl font-bold text-white">Une erreur est survenue</h2>
+            <p class="text-white/60">Notre équipe technique a été informée. Veuillez réessayer dans quelques instants.</p>
+        </div>
+        <div class="pt-4">
+            <a href="{% url 'fundraiser_list' %}" class="inline-block py-4 px-8 bg-white text-black font-bold rounded-2xl hover:bg-gray-200 transition-all">
+                Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
