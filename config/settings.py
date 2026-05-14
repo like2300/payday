@@ -170,7 +170,7 @@ FILE_UPLOAD_HANDLERS = [
 # -----------------------------------------------------
 
 # OpenPay Configuration
-OPENPAY_API_KEY = config('OPENPAY_API_KEY')
+OPENPAY_API_KEY = config('OPENPAY_API_KEY', default='')
 OPENPAY_BASE_URL = 'https://api.openpay-cg.com/v1'
 SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
 
