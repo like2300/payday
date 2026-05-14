@@ -56,7 +56,8 @@ class FundraiserAdmin(ModelAdmin):
 
     def progress_display(self, obj):
         if not obj.target_amount:
-            return format_html('<span style="color: #6b7280; font-style: italic;">Sans objectif</span>')
+            from django.utils.safestring import mark_safe
+            return mark_safe('<span style="color: #6b7280; font-style: italic;">Sans objectif</span>')
             
         progress = obj.get_progress_percentage()
         color = '#10b981' if progress >= 80 else '#f59e0b' if progress >= 40 else '#ef4444'

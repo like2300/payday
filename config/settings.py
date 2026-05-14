@@ -153,6 +153,22 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# --- Configuration pour l'upload de grosses vidéos ---
+# Limite la taille de la RAM utilisée pour l'upload (2.5 Mo). 
+# Au-delà, Django écrit directement sur le disque (temp), ce qui évite de faire crash le serveur.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440 # 2.5 MB
+
+# Augmente la taille maximale autorisée pour un upload (ici 500 Mo)
+# Par défaut Django limite à 2.5 Mo pour les formulaires
+DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000 # 500 MB
+
+# Liste des gestionnaires d'upload (priorité au disque pour les gros fichiers)
+FILE_UPLOAD_HANDLERS = [
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+]
+# -----------------------------------------------------
+
 # OpenPay Configuration
 OPENPAY_API_KEY = config('OPENPAY_API_KEY')
 OPENPAY_BASE_URL = 'https://api.openpay-cg.com/v1'
