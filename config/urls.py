@@ -60,7 +60,7 @@ urlpatterns = [
     # Votes
     path('votes/', vote_list, name='vote_list'),
     path('votes/<slug:slug>/', vote_detail, name='vote_detail'),
-    path('votes/initiate/<int:candidate_id>/', initiate_vote, name='initiate_vote'),
+    path('votes/initiate/<int:choice_id>/', initiate_vote, name='initiate_vote'),
     
     # Payments API & Webhooks
     path('api/payment/initiate/', initiate_payment, name='api_initiate_payment'),

@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.urls import reverse
-from .models import VoteSession, Candidate, VoteRecord
+from .models import VoteSession, Choice, VoteRecord
 from payments.services import OpenPayService
 from django.conf import settings
 from decimal import Decimal
@@ -27,10 +27,10 @@ def vote_list(request):
 
 def vote_detail(request, slug):
     session = get_object_or_404(VoteSession, slug=slug, is_active=True)
-    candidates = session.candidates.all().order_by('-vote_count')
+    choices = session.choices.all().order_by('-vote_count')
     return render(request, 'votes/detail.html', {
         'session': session,
-        'candidates': candidates,
+        'choices': choices,
     })
 
 def get_client_ip(request):
@@ -41,9 +41,9 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-def initiate_vote(request, candidate_id):
-    candidate = get_object_or_404(Candidate, id=candidate_id, session__is_active=True)
-    session = candidate.session
+def initiate_vote(request, choice_id):
+    choice = get_object_or_404(Choice, id=choice_id, session__is_active=True)
+    session = choice.session
     ip_address = get_client_ip(request)
     
     if request.method == 'POST':
@@ -55,10 +55,10 @@ def initiate_vote(request, candidate_id):
             site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000')
             result = OpenPayService.create_payment(
                 amount=session.vote_price,
-                description=f"Vote pour {candidate.name} - {session.title}",
+                description=f"Vote pour {choice.name} - {session.title}",
                 customer_name=voter_name,
                 customer_phone=voter_phone,
-                external_id=f"vote_{candidate.id}_{ip_address}", # use IP in external_id for tracking
+                external_id=f"vote_{choice.id}_{ip_address}", # use IP in external_id for tracking
                 success_url=f"{site_url}{reverse('vote_detail', kwargs={'slug': session.slug})}?status=success",
                 callback_url=f"{site_url}/openpay/callback",
             )
@@ -71,7 +71,7 @@ def initiate_vote(request, candidate_id):
         else:
             # Free vote logic with IP check
             has_voted = VoteRecord.objects.filter(
-                candidate__session=session, 
+                choice__session=session, 
                 ip_address=ip_address,
                 amount_paid=0
             ).exists()
@@ -81,13 +81,13 @@ def initiate_vote(request, candidate_id):
                 return redirect('vote_detail', slug=session.slug)
             
             VoteRecord.objects.create(
-                candidate=candidate,
+                choice=choice,
                 ip_address=ip_address,
                 amount_paid=0
             )
-            candidate.vote_count += 1
-            candidate.save()
-            messages.success(request, f"Merci ! Votre vote pour {candidate.name} a été enregistré.")
+            choice.vote_count += 1
+            choice.save()
+            messages.success(request, f"Merci ! Votre vote pour {choice.name} a été enregistré.")
             return redirect('vote_detail', slug=session.slug)
             
     return redirect('vote_detail', slug=session.slug)

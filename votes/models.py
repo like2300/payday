@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 class VoteSession(models.Model):
     CATEGORY_CHOICES = [
@@ -35,26 +36,34 @@ class VoteSession(models.Model):
     def __str__(self):
         return self.title
         
+    def clean(self):
+        super().clean()
+        if self.vote_price > 0 and self.vote_price < 100:
+            raise ValidationError({
+                'vote_price': "Le montant d'un vote doit être de 0 (gratuit) ou au minimum 100 FCFA."
+            })
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        self.full_clean()
         super().save(*args, **kwargs)
         
     def get_absolute_url(self):
         return reverse('vote_detail', kwargs={'slug': self.slug})
 
-class Candidate(models.Model):
-    session = models.ForeignKey(VoteSession, on_delete=models.CASCADE, related_name='candidates', verbose_name="Session de vote")
-    name = models.CharField(max_length=100, verbose_name="Nom du candidat")
-    image = models.ImageField(upload_to='votes/choices/', verbose_name="Photo du candidat")
-    description = models.TextField(blank=True, verbose_name="Description/Bio")
+class Choice(models.Model):
+    session = models.ForeignKey(VoteSession, on_delete=models.CASCADE, related_name='choices', verbose_name="Session de vote")
+    name = models.CharField(max_length=100, verbose_name="Nom de l'option")
+    image = models.ImageField(upload_to='votes/choices/', verbose_name="Image d'illustration")
+    description = models.TextField(blank=True, verbose_name="Description")
     vote_count = models.PositiveIntegerField(default=0, verbose_name="Nombre de votes")
     
     def __str__(self):
         return f"{self.name} ({self.session.title})"
 
 class VoteRecord(models.Model):
-    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='votes', verbose_name="Candidat")
+    choice = models.ForeignKey(Choice, on_delete=models.CASCADE, related_name='votes', verbose_name="Choix")
     voter_name = models.CharField(max_length=100, blank=True, null=True, verbose_name="Nom du votant")
     voter_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Téléphone du votant")
     ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name="Adresse IP")
@@ -63,8 +72,8 @@ class VoteRecord(models.Model):
     
     class Meta:
         indexes = [
-            models.Index(fields=['candidate', 'ip_address']),
+            models.Index(fields=['choice', 'ip_address']),
         ]
 
     def __str__(self):
-        return f"Vote pour {self.candidate.name}"
+        return f"Vote pour {self.choice.name}"

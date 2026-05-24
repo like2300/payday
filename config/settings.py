@@ -90,6 +90,99 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
+# --- Django Unfold Configuration ---
+UNFOLD = {
+    "SITE_TITLE": "Tosounga Admin",
+    "SITE_HEADER": "Tosounga",
+    "SITE_URL": "/",
+    "SITE_ICON": None,  # You can add a path to an icon if available
+    "COLORS": {
+        "primary": {
+            "50": "250 250 250",
+            "100": "244 244 245",
+            "200": "228 228 231",
+            "300": "212 212 216",
+            "400": "161 161 170",
+            "500": "113 113 122",
+            "600": "82 82 91",
+            "700": "63 63 70",
+            "800": "39 39 42",
+            "900": "24 24 27",
+            "950": "9 9 11",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Navigation Principale",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Tableau de Bord",
+                        "icon": "dashboard",
+                        "link": "/admin/",
+                    },
+                ],
+            },
+            {
+                "title": "Collectes de fonds",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Liste des collectes",
+                        "icon": "payments",
+                        "link": "/admin/core/fundraiser/",
+                    },
+                    {
+                        "title": "Transactions",
+                        "icon": "paid",
+                        "link": "/admin/core/transaction/",
+                    },
+                ],
+            },
+            {
+                "title": "Système de Vote",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Sessions de vote",
+                        "icon": "how_to_reg",
+                        "link": "/admin/votes/votesession/",
+                    },
+                    {
+                        "title": "Options de vote",
+                        "icon": "person_add",
+                        "link": "/admin/votes/choice/",
+                    },
+                    {
+                        "title": "Records de vote",
+                        "icon": "poll",
+                        "link": "/admin/votes/voterecord/",
+                    },
+                ],
+            },
+            {
+                "title": "Administration",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Utilisateurs",
+                        "icon": "manage_accounts",
+                        "link": "/admin/auth/user/",
+                    },
+                    {
+                        "title": "Groupes",
+                        "icon": "groups",
+                        "link": "/admin/auth/group/",
+                    },
+                ],
+            },
+        ],
+    },
+}
+
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 

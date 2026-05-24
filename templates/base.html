@@ -16,6 +16,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <style>
+        html, body { overflow-x: hidden; width: 100%; }
         body { font-family: 'Inter', sans-serif; background-color: #000000; color: #ffffff; }
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -76,16 +77,16 @@
 
         {% if not hide_sidebar %}
         {% block sidebar %}
-        <aside id="sidebar" class="fixed lg:sticky left-0 top-0 h-screen z-50 flex flex-col p-8 -translate-x-full lg:translate-x-0">
-            <div class="flex items-center justify-between mb-12">
+        <aside id="sidebar" class="hidden lg:flex fixed left-0 top-0 h-screen w-[280px] z-50 flex-col p-8 border-r border-white/5 bg-black overflow-y-auto custom-scrollbar transition-all duration-300">
+            <div class="flex items-center justify-between mb-12 shrink-0">
                 <a href="{% url 'fundraiser_list' %}" class="logo-text text-2xl font-bold tracking-tight text-white uppercase">Tosounga</a>
                 <button onclick="toggleSidebar()" class="text-gray-500 hover:text-white transition-colors">
                     <span class="material-icons" id="toggle-icon">menu_open</span>
                 </button>
             </div>
 
-            <nav class="flex-1 overflow-y-auto custom-scrollbar">
-                <ul class="space-y-6">
+            <nav class="flex-1">
+                <ul class="space-y-4">
                     <li>
                         <a href="{% url 'fundraiser_list' %}"
                            class="nav-item flex items-center gap-4 text-gray-400 hover:text-white transition-colors py-3 px-4 rounded-xl hover:bg-white/5 {% if request.resolver_match.url_name == 'fundraiser_list' and not request.GET.category %}text-white bg-white/10 shadow-lg shadow-white/5{% endif %}">
@@ -93,91 +94,104 @@
                             <span class="nav-label font-bold text-sm">Découvrir</span>
                         </a>
                     </li>
-                    <li class="pt-8 border-t border-white/5">
-                        <p class="section-title text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-4">Catégories</p>
-                        <ul class="space-y-2">
-                            {% load anivpay_sidebar %}
-                            {% get_categories_for_sidebar %}
-                        </ul>
+                    <li>
+                        <a href="{% url 'vote_list' %}"
+                           class="nav-item flex items-center gap-4 text-gray-400 hover:text-white transition-colors py-3 px-4 rounded-xl hover:bg-white/5 {% if request.resolver_match.url_name == 'vote_list' or request.resolver_match.url_name == 'vote_detail' %}text-white bg-white/10 shadow-lg shadow-white/5{% endif %}">
+                            <span class="material-icons nav-icon">how_to_reg</span>
+                            <span class="nav-label font-bold text-sm">Votes</span>
+                        </a>
                     </li>
                 </ul>
             </nav>
 
-            <div class="pt-8 border-t border-white/5 mt-auto">
+            {% if user.is_authenticated and user.is_staff %}
+            <div class="pt-8 border-t border-white/5 mt-12 shrink-0">
                 <a href="{% url 'admin:index' %}" class="nav-item flex items-center gap-4 text-gray-400 hover:text-white transition-colors py-3 px-4 rounded-xl hover:bg-white/5 text-sm">
                     <span class="material-icons nav-icon text-lg">admin_panel_settings</span>
                     <span class="nav-label font-bold">Administration</span>
                 </a>
             </div>
+            {% endif %}
         </aside>
-
-        <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity duration-300 opacity-0"></div>
         {% endblock %}
         {% endif %}
 
-        <div class="main-wrapper">
+        <div class="main-wrapper {% if not hide_sidebar %}lg:ml-[280px]{% endif %}" id="main-wrapper">
 
             {% if not hide_sidebar %}
             <header id="top-header" class="top-header backdrop-blur-md z-40 flex items-center px-6 md:px-8">
                 <div class="flex items-center justify-between w-full gap-8">
-                    <div class="flex items-center gap-4 lg:hidden">
+                    <div class="flex items-center gap-4">
                         <a href="{% url 'fundraiser_list' %}" class="text-xl font-bold tracking-tight text-white uppercase">Tosounga</a>
                     </div>
 
-                    <div class="flex-1 max-w-2xl">
+                    <div class="flex-1 flex justify-end md:justify-start">
                         {% block header_content %}
-                        <form action="{% url 'fundraiser_list' %}" method="GET" class="relative group">
-                            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-white transition-colors">search</span>
-                            <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Rechercher une collecte..."
-                                   class="w-full bg-white/5 border border-transparent px-12 py-3 text-sm font-medium text-white rounded-2xl focus:outline-none focus:bg-white/10 focus:border-white/20 transition-all placeholder:text-gray-500">
-                        </form>
+                        <button onclick="openSearchModal()" class="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-2xl text-gray-400 hover:text-white transition-all border border-white/5">
+                            <span class="material-icons text-xl">search</span>
+                            <span class="text-sm font-medium hidden md:block">Rechercher...</span>
+                        </button>
                         {% endblock %}
                     </div>
 
-                    <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 text-gray-400 hover:text-white transition-colors">
-                        <span class="material-icons">menu</span>
-                    </button>
+                    <div class="flex items-center gap-4">
+                        {% if user.is_authenticated and user.is_staff %}
+                         <a href="{% url 'admin:index' %}" class="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                            <span class="material-icons text-xl">admin_panel_settings</span>
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </header>
             {% endif %}
 
-            <main id="main-content" class="main-content {% block main_class %}{% if not hide_sidebar %}px-6 md:px-8 lg:px-12{% endif %} %}{% endblock %} pb-12">
+            <main id="main-content" class="main-content {% block main_class %}{% if not hide_sidebar %}px-6 md:px-8 lg:px-12{% endif %} %}{% endblock %} pb-32 md:pb-12">
                 {% block content %}{% endblock %}
             </main>
+
+            {% include "partials/bottom_nav.html" %}
 
         </div>
     </div>
 
+    <style>
+        .glass-navbar {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+        }
+    </style>
+
     <script>
         const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
         const toggleIcon = document.getElementById('toggle-icon');
+        const mainWrapper = document.getElementById('main-wrapper');
 
         function toggleSidebar() {
             const isCollapsed = sidebar.classList.toggle('sidebar-collapsed');
             if (toggleIcon) toggleIcon.innerText = isCollapsed ? 'menu' : 'menu_open';
-            localStorage.setItem('sidebarCollapsed', isCollapsed);
-        }
-
-        function toggleMobileSidebar() {
-            const isHidden = sidebar.classList.contains('-translate-x-full');
-            if (isHidden) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                setTimeout(() => overlay.classList.add('opacity-100'), 10);
-                document.body.classList.add('overflow-hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.remove('opacity-100');
-                setTimeout(() => overlay.classList.add('hidden'), 300);
-                document.body.classList.remove('overflow-hidden');
+            
+            if (mainWrapper) {
+                if (isCollapsed) {
+                    mainWrapper.classList.remove('lg:ml-[280px]');
+                    mainWrapper.classList.add('lg:ml-[88px]');
+                } else {
+                    mainWrapper.classList.add('lg:ml-[280px]');
+                    mainWrapper.classList.remove('lg:ml-[88px]');
+                }
             }
+            
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
         }
 
         // Restauration de l'état précédent
         if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth >= 1024) {
-            sidebar.classList.add('sidebar-collapsed');
+            if (sidebar) sidebar.classList.add('sidebar-collapsed');
             if (toggleIcon) toggleIcon.innerText = 'menu';
+            if (mainWrapper) {
+                mainWrapper.classList.remove('lg:ml-[280px]');
+                mainWrapper.classList.add('lg:ml-[88px]');
+            }
         }
     </script>
     {% block extra_js %}{% endblock %}

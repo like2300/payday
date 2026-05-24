@@ -1,0 +1,131 @@
+{% if not hide_sidebar %}
+<!-- Liquid Glass Bottom Navbar (Mobile Only) -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[100] md:hidden">
+    <div class="glass-navbar flex items-center justify-between p-1.5 rounded-[2rem] border border-white/10 shadow-2xl">
+        <a href="{% url 'fundraiser_list' %}" 
+           class="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-2xl transition-all duration-500 {% if request.resolver_match.url_name == 'fundraiser_list' %}text-white{% else %}text-white/30 hover:text-white/50{% endif %}">
+            <span class="material-icons text-xl">explore</span>
+            <span class="text-[8px] font-black uppercase tracking-[0.15em]">Explorer</span>
+        </a>
+
+        <!-- Contextual Search Button - Floating & Aligned -->
+        <div class="relative -top-1 px-2">
+            <button onclick="openSearchModal()" 
+                    class="flex items-center justify-center w-12 h-12 bg-white text-black rounded-full shadow-xl shadow-white/5 hover:scale-105 active:scale-90 transition-all">
+                <span class="material-icons text-xl">search</span>
+            </button>
+        </div>
+        
+        <a href="{% url 'vote_list' %}" 
+           class="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-2xl transition-all duration-500 {% if request.resolver_match.url_name == 'vote_list' or request.resolver_match.url_name == 'vote_detail' %}text-white{% else %}text-white/30 hover:text-white/50{% endif %}">
+            <span class="material-icons text-xl">how_to_reg</span>
+            <span class="text-[8px] font-black uppercase tracking-[0.15em]">Vote</span>
+        </a>
+    </div>
+</nav>
+
+<!-- Mobile & Desktop Search Modal - Premium Glass -->
+<div id="searchModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 md:p-8">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-[60px] saturate-[200%]" onclick="closeSearchModal()"></div>
+    <div class="relative w-full max-w-xl animate-in fade-in zoom-in duration-500 ease-out">
+        <div class="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl backdrop-blur-md">
+            <form id="mobileSearchForm" action="" method="GET" class="space-y-8">
+                <div class="text-center space-y-2 mb-4">
+                    <h2 class="text-2xl md:text-3xl font-black text-white tracking-tighter">Que cherchez-vous ?</h2>
+                    <p class="text-white/30 text-xs md:text-sm font-bold uppercase tracking-widest">Saisissez un mot-clé ou choisissez une catégorie</p>
+                </div>
+
+                <div class="relative group">
+                    <span class="material-icons absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-white transition-colors text-2xl">search</span>
+                    <input type="text" name="q" id="mobileSearchInput" placeholder="Rechercher..."
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl pl-16 pr-6 py-6 text-lg md:text-xl font-bold text-white focus:outline-none focus:bg-white/10 focus:border-white/20 transition-all placeholder:text-white/10 shadow-inner">
+                </div>
+                
+                <div class="space-y-4">
+                    <p class="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Suggestions populaires</p>
+                    <div class="flex flex-wrap gap-2" id="searchSuggestions">
+                        <!-- Suggestions populated by JS -->
+                    </div>
+                </div>
+
+                <div class="flex justify-center pt-4">
+                    <button type="button" onclick="closeSearchModal()" class="group flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all border border-white/5">
+                        <span class="material-icons text-sm">close</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Fermer</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const searchModal = document.getElementById('searchModal');
+    const mobileSearchForm = document.getElementById('mobileSearchForm');
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    const searchSuggestions = document.getElementById('searchSuggestions');
+
+    const fundraiserCategories = [
+        { label: 'Anniversaire', value: 'birthday' },
+        { label: 'Mariage', value: 'wedding' },
+        { label: 'Diplômation', value: 'graduation' }
+    ];
+
+    const voteCategories = [
+        { label: 'Musique', value: 'music' },
+        { label: 'Sport', value: 'sport' },
+        { label: 'Beauté', value: 'beauty' },
+        { label: 'Éducation', value: 'education' }
+    ];
+
+    function openSearchModal() {
+        const path = window.location.pathname;
+        let isVote = path.includes('/votes/');
+        
+        searchSuggestions.innerHTML = '';
+        const currentCats = isVote ? voteCategories : fundraiserCategories;
+        
+        currentCats.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'px-4 py-2.5 bg-white/5 border border-white/5 rounded-xl text-[10px] font-bold text-white/50 hover:bg-white/10 hover:text-white transition-all';
+            btn.innerText = cat.label;
+            btn.onclick = () => {
+                if (isVote) {
+                    window.location.href = `{% url 'vote_list' %}?category=${cat.value}`;
+                } else {
+                    window.location.href = `{% url 'fundraiser_list' %}?category=${cat.value}`;
+                }
+            };
+            searchSuggestions.appendChild(btn);
+        });
+
+        if (isVote) {
+            mobileSearchForm.action = "{% url 'vote_list' %}";
+            mobileSearchInput.placeholder = "Rechercher un vote...";
+        } else {
+            mobileSearchForm.action = "{% url 'fundraiser_list' %}";
+            mobileSearchInput.placeholder = "Rechercher une collecte...";
+        }
+
+        searchModal.classList.remove('hidden');
+        searchModal.classList.add('flex');
+        setTimeout(() => mobileSearchInput.focus(), 100);
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSearchModal() {
+        searchModal.classList.add('hidden');
+        searchModal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+
+    function setSearchValue(val) {
+        mobileSearchInput.value = val;
+        mobileSearchForm.submit();
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeSearchModal();
+    });
+</script>{% endif %}

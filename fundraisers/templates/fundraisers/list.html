@@ -3,36 +3,6 @@
 
 {% block title %}PayDay | Toutes les collectes{% block title_suffix %}{% endblock %}{% endblock %}
 
-{% block header_content %}
-<!-- Search & Filters -->
-<form action="{% url 'fundraiser_list' %}" method="GET" class="flex items-center gap-2 w-full md:w-auto">
-    <div class="relative w-full md:w-80">
-        <input type="text" name="q" value="{{ search_query }}" placeholder="Rechercher une collecte..." 
-               class="w-full bg-white/5 border border-white/10 rounded-full px-6 py-2 text-sm focus:outline-none focus:border-white/30 transition-all">
-    </div>
-    <select name="category" onchange="this.form.submit()" 
-            class="bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-white/30 appearance-none cursor-pointer">
-        <option value="">Toutes catégories</option>
-        {% for cat_val, cat_name in categories %}
-            <option value="{{ cat_val }}" {% if selected_category == cat_val %}selected{% endif %}>{{ cat_name }}</option>
-        {% endfor %}
-    </select>
-    <select name="sort" onchange="this.form.submit()" 
-            class="bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-white/30 appearance-none cursor-pointer">
-        <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Plus récent</option>
-        <option value="-collected_amount" {% if current_sort == '-collected_amount' %}selected{% endif %}>Plus collecté</option>
-        <option value="collected_amount" {% if current_sort == 'collected_amount' %}selected{% endif %}>Moins collecté</option>
-    </select>
-    {% if search_query or selected_category or current_sort != '-created_at' %}
-        <a href="{% url 'fundraiser_list' %}" class="text-white/40 hover:text-white transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </a>
-    {% endif %}
-</form>
-{% endblock %}
-
 {% block extra_css %}
 <style>
     .fundraiser-card {
@@ -53,7 +23,7 @@
         inset: 0;
         width: 100%;
         height: 100%;
-        object-cover: cover;
+        object-fit: cover;
         opacity: 0;
         filter: blur(20px);
         transform: scale(1.2);
@@ -73,6 +43,36 @@
 {% endblock %}
 
 {% block content %}
+<!-- Page Header -->
+<div class="mb-12">
+    <h1 class="text-3xl md:text-4xl font-black text-white tracking-tighter mb-2">Explorez les collectes</h1>
+    <p class="text-white/40 font-medium">Soutenez les projets qui vous tiennent à cœur.</p>
+</div>
+
+<!-- Filters Bar -->
+<div class="mb-12 flex items-center gap-3 overflow-x-auto pb-4 custom-scrollbar">
+    <!-- Search Pill (Hidden on Mobile as it's in Bottom Nav) -->
+    <button onclick="openSearchModal()" 
+            class="hidden md:flex items-center gap-2 whitespace-nowrap px-6 py-3 rounded-2xl bg-white text-black shadow-xl shadow-white/5 hover:scale-105 active:scale-90 transition-all">
+        <span class="material-icons text-sm">search</span>
+        <span class="text-[10px] font-black uppercase tracking-widest">Rechercher</span>
+    </button>
+
+    <div class="hidden md:block w-px h-8 bg-white/10 mx-1"></div>
+
+    <!-- Category Pills -->
+    <a href="{% url 'fundraiser_list' %}" 
+       class="whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all {% if not selected_category %}bg-white/20 text-white shadow-xl shadow-white/5{% else %}bg-white/5 text-white/40 hover:bg-white/10 hover:text-white{% endif %}">
+        Tout
+    </a>
+    {% for cat_val, cat_name in categories %}
+        <a href="?category={{ cat_val }}{% if search_query %}&q={{ search_query }}{% endif %}" 
+           class="whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all {% if selected_category == cat_val %}bg-white/20 text-white shadow-xl shadow-white/5{% else %}bg-white/5 text-white/40 hover:bg-white/10 hover:text-white{% endif %}">
+            {{ cat_name }}
+        </a>
+    {% endfor %}
+</div>
+
 <!-- Grid -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
     {% for fundraiser in fundraisers %}

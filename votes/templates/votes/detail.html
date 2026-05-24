@@ -74,36 +74,36 @@
     </div>
     {% endif %}
 
-    <!-- Candidates Grid -->
+    <!-- Choices Grid -->
     <div class="max-w-[1400px] mx-auto px-4 md:px-8 mt-16">
         <div class="flex items-center justify-between mb-10 border-b border-white/5 pb-6">
-            <h2 class="text-2xl font-black text-white tracking-tighter">Choisissez votre candidat</h2>
-            <p class="text-white/20 text-xs font-black uppercase tracking-widest">{{ candidates.count }} Candidats</p>
+            <h2 class="text-2xl font-black text-white tracking-tighter">Faites votre choix</h2>
+            <p class="text-white/20 text-xs font-black uppercase tracking-widest">{{ choices.count }} Options</p>
         </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-            {% for candidate in candidates %}
+            {% for choice in choices %}
                 <div class="bg-white/5 border border-white/10 rounded-[2.5rem] p-6 hover:border-white/30 transition-all group relative overflow-hidden">
                     <!-- Background Glow -->
                     <div class="absolute -top-24 -right-24 w-48 h-48 bg-white/5 blur-3xl rounded-full group-hover:bg-white/10 transition-all"></div>
                     
                     <div class="relative aspect-square rounded-[2rem] overflow-hidden mb-6 border border-white/5">
-                        <img src="{{ candidate.image.url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="{{ candidate.name }}">
+                        <img src="{{ choice.image.url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="{{ choice.name }}">
                         
                         <!-- Vote Badge -->
                         <div class="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                            <p class="text-white font-black text-sm">{{ candidate.vote_count }} <span class="text-[10px] text-white/40 uppercase">Votes</span></p>
+                            <p class="text-white font-black text-sm">{{ choice.vote_count }} <span class="text-[10px] text-white/40 uppercase">Votes</span></p>
                         </div>
                     </div>
                     
                     <div class="space-y-4">
-                        <h3 class="text-2xl font-black text-white tracking-tight leading-tight">{{ candidate.name }}</h3>
-                        {% if candidate.description %}
-                            <p class="text-white/40 text-sm line-clamp-2 leading-relaxed h-10">{{ candidate.description }}</p>
+                        <h3 class="text-2xl font-black text-white tracking-tight leading-tight">{{ choice.name }}</h3>
+                        {% if choice.description %}
+                            <p class="text-white/40 text-sm line-clamp-2 leading-relaxed h-10">{{ choice.description }}</p>
                         {% endif %}
                         
-                        <button id="voteBtn-{{ candidate.id }}" 
-                                onclick="handleVote('{{ candidate.id }}', '{{ candidate.name|escapejs }}', '{{ session.vote_price }}')" 
+                        <button id="voteBtn-{{ choice.id }}" 
+                                onclick="handleVote('{{ choice.id }}', '{{ choice.name|escapejs }}', '{{ session.vote_price }}')" 
                                 class="w-full py-4 bg-white text-black rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-white/5">
                             Voter
                         </button>
@@ -127,7 +127,7 @@
         <div class="space-y-8">
             <div class="space-y-2">
                 <p class="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Confirmation de vote</p>
-                <h2 class="text-4xl font-black text-white tracking-tighter">Voter pour <span id="modalCandidateName" class="text-white/100"></span></h2>
+                <h2 class="text-4xl font-black text-white tracking-tighter">Voter pour <span id="modalChoiceName" class="text-white/100"></span></h2>
             </div>
 
             <form id="voteForm" method="POST" action="" class="space-y-6">
@@ -164,7 +164,7 @@
 <script>
     const sessionSlug = "{{ session.slug }}";
 
-    function handleVote(candidateId, candidateName, price) {
+    function handleVote(choiceId, choiceName, price) {
         const hasVoted = localStorage.getItem(`voted_${sessionSlug}`);
         
         if (price == "0.00" && hasVoted) {
@@ -172,18 +172,18 @@
             return;
         }
 
-        openVoteModal(candidateId, candidateName, price);
+        openVoteModal(choiceId, choiceName, price);
     }
 
-    function openVoteModal(candidateId, candidateName, price) {
+    function openVoteModal(choiceId, choiceName, price) {
         const modal = document.getElementById('voteModal');
         const form = document.getElementById('voteForm');
-        const nameSpan = document.getElementById('modalCandidateName');
+        const nameSpan = document.getElementById('modalChoiceName');
         const paidFields = document.getElementById('paidFields');
         const voterNameInput = document.getElementById('voter_name');
         
-        nameSpan.innerText = candidateName;
-        form.action = `/votes/initiate/${candidateId}/`;
+        nameSpan.innerText = choiceName;
+        form.action = `/votes/initiate/${choiceId}/`;
         
         if (parseFloat(price) > 0) {
             paidFields.classList.remove('hidden');
