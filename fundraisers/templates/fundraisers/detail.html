@@ -8,262 +8,363 @@
 {% block og_description %}Aidez {{ fundraiser.beneficiary_name }} à atteindre son objectif de {{ fundraiser.target_amount|floatformat:0 }} FCFA.{% endblock %}
 {% block og_image %}{{ request.scheme }}://{{ request.get_host }}{{ fundraiser.background_media.url }}{% endblock %}
 
-{% block body_class %}overflow-hidden{% endblock %}
+{% block body_class %}bg-black text-white selection:bg-white selection:text-black overflow-x-hidden{% endblock %}
+{% block hide_sidebar %}True{% endblock %}
+{% block main_class %}p-0 m-0 w-full min-h-screen{% endblock %}
 
 {% block extra_css %}
-    .glass {
+<style>
+    /* Override global layout constraints */
+    .app-container { display: block !important; }
+    .main-wrapper { display: block !important; width: 100% !important; }
+    .main-content { padding-top: 0 !important; width: 100% !important; margin: 0 !important; }
+    #top-header { display: none !important; }
+    
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        border-radius: 10px;
     }
-    .apple-gradient-text {
-        background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .animate-fadeIn {
+        animation: fadeIn 0.5s ease-out forwards;
     }
-    @keyframes subtle-zoom {
-        0% { transform: scale(1); }
-        100% { transform: scale(1.1); }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
-    .bg-media {
-        animation: subtle-zoom 20s infinite alternate linear;
-    }
-    .modal-enter {
-        animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes slide-up {
-        from { transform: translateY(100%); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-{% endblock %}
-
-{% block header_content %}
-<div class="flex justify-center flex-1">
-    <h2 class="text-white/40 font-semibold tracking-widest text-xs uppercase">Détails de la collecte</h2>
-</div>
+</style>
 {% endblock %}
 
 {% block content %}
-    <!-- Background Media -->
-    <div class="fixed inset-0 -z-10 bg-black">
+<!-- Back Button -->
+<a href="{% url 'fundraiser_list' %}" 
+   class="fixed top-8 left-8 z-[60] flex items-center justify-center w-12 h-12 bg-black/50 backdrop-blur-xl border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-all duration-500 group">
+    <span class="material-icons text-xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
+</a>
+
+<div class="flex flex-wrap min-h-screen">
+    <!-- Image Section (Left on Desktop, Top on Mobile) -->
+    <div class="w-full lg:w-4/12 h-64 lg:h-screen lg:sticky lg:top-0 order-1 lg:order-1 overflow-hidden">
         {% if fundraiser.media_type == 'video' %}
-            <video autoplay muted loop playsinline class="w-full h-full object-cover bg-media opacity-60">
+            <video autoplay muted loop playsinline class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000">
                 <source src="{{ fundraiser.background_media.url }}" type="video/mp4">
             </video>
         {% else %}
-            <img src="{{ fundraiser.background_media.url }}" class="w-full h-full object-cover bg-media opacity-60" alt="Background">
+            <img src="{{ fundraiser.background_media.url }}" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" alt="{{ fundraiser.title }}">
         {% endif %}
-        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent lg:hidden"></div>
     </div>
 
-    <!-- Main Content -->
-    <div class="h-[calc(100vh-120px)] flex flex-col items-center justify-center text-center">
-        <!-- Glass Card -->
-        <div class="glass w-full max-w-lg rounded-[40px] p-8 md:p-12 space-y-8 animate-fadeIn">
-            
-            <div class="space-y-2">
-                <h1 class="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+    <!-- Content Section (Right on Desktop, Bottom on Mobile) -->
+    <div class="w-full lg:w-8/12 order-2 lg:order-2 bg-black min-h-screen">
+        <div class="container mx-auto px-6 py-12 lg:p-20">
+            <!-- Navigation -->
+            <nav class="flex justify-between items-center mb-16 lg:mb-24">
+                <a href="{% url 'fundraiser_list' %}" class="text-3xl font-black uppercase tracking-tighter hover:opacity-70 transition-opacity">
+                    Tosounga<span class="opacity-20">.</span>
+                </a>
+                
+                <button onclick="toggleDonorsSidebar()" class="group flex items-center gap-4 bg-white/5 hover:bg-white/10 px-6 py-3 rounded-full border border-white/5 transition-all">
+                    <span class="material-icons text-white/40 group-hover:text-white text-xl">groups</span>
+                    <span class="text-xs font-black uppercase tracking-[0.2em]">{{ fundraiser.completed_transactions_count }} Donateurs</span>
+                </button>
+            </nav>
+
+            <!-- Hero Content -->
+            <header class="max-w-3xl mb-20 animate-fadeIn">
+                <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-8">
+                    <span class="w-2 h-2 rounded-full animate-pulse" style="background-color: {{ fundraiser.button_color }};"></span>
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Collecte Active</span>
+                </div>
+
+                <h1 class="text-5xl lg:text-8xl font-black leading-[0.9] tracking-tighter mb-10 uppercase">
                     {{ fundraiser.title }}
                 </h1>
-                <p class="text-white/60 text-lg font-medium">Pour {{ fundraiser.beneficiary_name }}</p>
-            </div>
+                
+                <div class="w-24 h-2 mb-10" style="background-color: {{ fundraiser.button_color }};"></div>
+                
+                <p class="text-xl lg:text-2xl text-white/60 mb-16 leading-relaxed font-medium">
+                    {{ fundraiser.description }}
+                </p>
 
-            <!-- Progress -->
-            <div class="space-y-4">
-                <div class="flex justify-between items-end">
-                    <div class="text-left">
-                        <p class="text-white/40 text-sm uppercase tracking-wider font-bold">Collecté</p>
-                        <p class="text-3xl font-bold text-white">{{ fundraiser.collected_amount|floatformat:0 }} <span class="text-lg font-medium opacity-60">FCFA</span></p>
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
+                    <div class="space-y-2">
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">Total Collecté</p>
+                        <p class="text-5xl lg:text-6xl font-black">{{ fundraiser.collected_amount|floatformat:0 }}<span class="text-xl opacity-30 ml-2">FCFA</span></p>
                     </div>
                     {% if fundraiser.target_amount %}
-                    <div class="text-right">
-                        <p class="text-white/40 text-sm uppercase tracking-wider font-bold">Objectif</p>
-                        <p class="text-xl font-semibold text-white/80">{{ fundraiser.target_amount|floatformat:0 }} FCFA</p>
+                    <div class="space-y-2">
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">Objectif de {{ fundraiser.beneficiary_name }}</p>
+                        <p class="text-5xl lg:text-6xl font-black opacity-40">{{ fundraiser.target_amount|floatformat:0 }}<span class="text-xl ml-2">FCFA</span></p>
                     </div>
                     {% endif %}
                 </div>
-                
+
+                <!-- Progress Bar -->
                 {% if fundraiser.target_amount %}
-                <div class="h-3 w-full bg-white/10 rounded-full overflow-hidden">
-                    <div id="progress-bar" 
-                         class="h-full bg-white transition-all duration-1000 ease-out" 
-                         style="width: {{ fundraiser.get_progress_percentage }}%"></div>
+                <div class="mb-20">
+                    <div class="h-1 w-full bg-white/10 mb-4">
+                        <div class="h-full bg-white transition-all duration-1000 ease-in-out" style="width: {{ fundraiser.get_progress_percentage }}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+                        <span>Progression</span>
+                        <span>{{ fundraiser.get_progress_percentage|floatformat:1 }}%</span>
+                    </div>
                 </div>
-                <p class="text-white/40 text-xs font-bold text-right">{{ fundraiser.get_progress_percentage|floatformat:1 }}% complété</p>
                 {% endif %}
-            </div>
 
-            <!-- Description -->
-            <p class="text-white/80 text-base leading-relaxed max-w-sm mx-auto">
-                {{ fundraiser.description }}
-            </p>
+                <!-- Donation Form Section -->
+                <section id="donation-section" class="scroll-mt-20">
+                    <div class="bg-zinc-900/50 rounded-[48px] p-8 lg:p-16 border border-white/5 backdrop-blur-sm">
+                        {% if fundraiser.is_closed %}
+                            <div class="text-center py-10">
+                                <h3 class="text-3xl font-black uppercase mb-4">Collecte Clôturée</h3>
+                                <p class="text-white/40">Merci à tous ceux qui ont contribué à cette cause.</p>
+                            </div>
+                        {% else %}
+                            <h2 class="text-3xl lg:text-4xl font-black uppercase tracking-tighter mb-12">Soutenir {{ fundraiser.beneficiary_name }}</h2>
+                            
+                            <form id="payment-form" class="space-y-8">
+                                {% csrf_token %}
+                                <input type="hidden" name="fundraiser_id" value="{{ fundraiser.id }}">
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div class="space-y-3">
+                                        <label class="text-[10px] font-black uppercase tracking-widest text-white/40 ml-4">Montant (FCFA)</label>
+                                        <input type="number" name="amount" required min="100" placeholder="Min: {{ fundraiser.min_donation_amount|floatformat:0 }}"
+                                               class="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-2xl font-black focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10">
+                                    </div>
+                                    <div class="space-y-3">
+                                        <label class="text-[10px] font-black uppercase tracking-widest text-white/40 ml-4">Opérateur</label>
+                                        <select name="provider" class="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-lg font-bold focus:outline-none focus:border-white/30 transition-all appearance-none">
+                                            <option value="MTN">MTN MoMo</option>
+                                            <option value="AIRTEL">Airtel Money</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-            <!-- CTA Buttons -->
-            <div class="space-y-3">
-                {% if fundraiser.is_closed %}
-                <div class="w-full py-5 rounded-3xl bg-red-600/20 border border-red-600/30 text-red-500 font-bold text-xl cursor-not-allowed">
-                    🚫 Collecte Clôturée
-                </div>
-                <p class="text-white/40 text-xs font-medium italic">L'objectif a été atteint. Merci à tous les donateurs !</p>
-                {% else %}
-                <button onclick="openModal('donation-modal')" 
-                        style="background-color: {{ fundraiser.button_color }};"
-                        class="w-full py-5 rounded-3xl text-white font-bold text-xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
-                    {{ fundraiser.button_text }}
-                </button>
-                {% endif %}
-                
-                <button onclick="openModal('donors-modal')" 
-                        class="w-full py-4 rounded-3xl bg-white/5 border border-white/10 text-white font-semibold text-sm transition-all duration-300 hover:bg-white/10">
-                    Voir les donateurs
-                </button>
-            </div>
+                                <div class="space-y-3">
+                                    <label class="text-[10px] font-black uppercase tracking-widest text-white/40 ml-4">Votre Nom (Optionnel)</label>
+                                    <input type="text" name="donor_name" placeholder="Anonyme"
+                                           class="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-lg font-bold focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10">
+                                </div>
 
-            <!-- Footer Stats -->
-            <div class="flex justify-center gap-12 pt-4">
+                                <div class="space-y-3">
+                                    <label class="text-[10px] font-black uppercase tracking-widest text-white/40 ml-4">Message d'encouragement</label>
+                                    <textarea name="message" rows="3" placeholder="Laissez un petit mot..."
+                                              class="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-lg font-bold focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10"></textarea>
+                                </div>
+
+                                <button type="submit" id="submit-btn"
+                                        style="background-color: {{ fundraiser.button_color }};"
+                                        class="w-full py-8 rounded-[32px] text-white font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300">
+                                    Contribuer maintenant
+                                </button>
+                                
+                                <p class="text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Sécurisé par OpenPay Congo</p>
+                            </form>
+                        {% endif %}
+                    </div>
+                </section>
+            </header>
+
+            <!-- Footer -->
+            <footer class="pt-20 border-t border-white/5 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 flex flex-wrap gap-12">
                 <div>
-                    <p class="text-white font-bold text-xl">{{ fundraiser.completed_transactions_count }}</p>
-                    <p class="text-white/30 text-[10px] uppercase font-bold tracking-widest">Donations</p>
+                    <span class="text-white/40 block mb-2">Créée le</span>
+                    {{ fundraiser.created_at|date:"d F Y" }}
                 </div>
                 <div>
-                    <p class="text-white font-bold text-xl">{{ fundraiser.created_at|timesince }}</p>
-                    <p class="text-white/30 text-[10px] uppercase font-bold tracking-widest">Temps écoulé</p>
+                    <span class="text-white/40 block mb-2">Localisation</span>
+                    Brazzaville, Congo
                 </div>
-            </div>
+                <div class="ml-auto">
+                    &copy; 2026 PayDay. Congo-Brazzaville
+                </div>
+            </footer>
         </div>
     </div>
+</div>
 
-    <!-- Donation Modal -->
-    <div id="donation-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeModal('donation-modal')"></div>
-        
-        <div class="glass relative w-full max-w-md rounded-[32px] p-8 modal-enter">
-            <h3 class="text-2xl font-bold text-white mb-6 text-left">Faire un don 🎁</h3>
-            
-            <form id="payment-form" class="space-y-5">
-                {% csrf_token %}
-                <input type="hidden" name="fundraiser_id" value="{{ fundraiser.id }}">
-                
-                <div>
-                    <label class="block text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2 text-left">Montant (FCFA)</label>
-                    <input type="number" name="amount" required min="100" placeholder="Min: {{ fundraiser.min_donation_amount|floatformat:0 }}"
-                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-xl font-bold focus:outline-none focus:border-white/30">
-                </div>
-
-                <div>
-                    <label class="block text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2 text-left">Opérateur (Optionnel)</label>
-                    <select name="provider" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-white/30">
-                        <option value="MTM">MTN MoMo</option>
-                        <option value="AIRTEL">Airtel Money</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2 text-left">Votre Nom (Optionnel)</label>
-                    <input type="text" name="donor_name" placeholder="Anonyme"
-                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-white/30">
-                </div>
-
-                <button type="submit" id="submit-btn"
-                        class="w-full py-5 bg-white text-black font-bold rounded-2xl text-lg hover:bg-gray-100 transition-colors">
-                    Confirmer le don
+<!-- Donors Sidebar -->
+<div id="donors-sidebar" class="fixed inset-y-0 right-0 w-full md:w-[450px] bg-zinc-950 border-l border-white/10 z-[70] transform translate-x-full transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+    <div class="flex flex-col h-full">
+        <!-- Sidebar Header -->
+        <div class="p-8 lg:p-12 border-b border-white/5">
+            <div class="flex items-center justify-between mb-12">
+                <h3 class="text-3xl font-black uppercase tracking-tighter">Donateurs</h3>
+                <button onclick="toggleDonorsSidebar()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors">
+                    <span class="material-icons text-white/40">close</span>
                 </button>
-
-                <button type="button" onclick="closeModal('donation-modal')"
-                        class="w-full py-2 text-white/30 hover:text-white/60 text-sm font-medium transition-colors">
-                    Annuler la transaction
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Donors Modal -->
-    <div id="donors-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeModal('donors-modal')"></div>
-        
-        <div class="glass relative w-full max-w-md rounded-[32px] p-8 modal-enter flex flex-col max-h-[80vh]">
-            <h3 class="text-2xl font-bold text-white mb-6 text-left">Donateurs</h3>
-            
-            <div class="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-                {% for txn in transactions %}
-                    <div class="flex justify-between items-center p-4 bg-white/5 border border-white/10 rounded-2xl">
-                        <div class="text-left">
-                            <p class="text-white font-bold">{{ txn.donor_name|default:"Anonyme" }}</p>
-                            <p class="text-white/40 text-[10px]">{{ txn.created_at|date:"d M Y, H:i" }}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-white font-bold">{{ txn.amount|floatformat:0 }} FCFA</p>
-                        </div>
-                    </div>
-                {% empty %}
-                    <div class="py-12 text-center space-y-3">
-                        <div class="text-4xl">🎁</div>
-                        <p class="text-white font-medium">Aucun don pour le moment</p>
-                        <p class="text-white/40 text-sm px-8">Soyez le premier à participer à cette collecte !</p>
-                    </div>
-                {% endfor %}
             </div>
-            
-            <button onclick="closeModal('donors-modal')" class="mt-6 w-full py-4 bg-white/10 text-white font-bold rounded-2xl hover:bg-white/20 transition-colors">
-                Fermer
+
+            <!-- Search -->
+            <div class="relative group">
+                <span class="material-icons absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-white transition-colors">search</span>
+                <input type="text" id="donor-search" placeholder="Rechercher..." 
+                       class="w-full bg-white/5 border border-white/10 rounded-[24px] py-6 pl-16 pr-6 text-lg font-bold focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10">
+            </div>
+        </div>
+
+        <!-- Donors List -->
+        <div id="donors-list" class="flex-1 overflow-y-auto custom-scrollbar p-8 lg:p-12 space-y-6">
+            <!-- AJAX Content -->
+            <div class="flex items-center justify-center h-full">
+                <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination-controls" class="p-8 lg:p-12 border-t border-white/5 flex items-center justify-between">
+            <button id="prev-page" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white disabled:opacity-10 transition-colors" disabled>
+                <span class="material-icons text-sm">arrow_back</span> Précédent
+            </button>
+            <span id="current-page-info" class="text-[10px] font-black uppercase tracking-widest text-white/20">
+                Page 1 sur 1
+            </span>
+            <button id="next-page" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white disabled:opacity-10 transition-colors" disabled>
+                Suivant <span class="material-icons text-sm">arrow_forward</span>
             </button>
         </div>
     </div>
+</div>
+
+<!-- Sidebar Overlay -->
+<div id="sidebar-overlay" onclick="toggleDonorsSidebar()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[65] hidden opacity-0 transition-all duration-700"></div>
+
 {% endblock %}
 
 {% block extra_js %}
-    <script>
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
+<script>
+    let currentPage = 1;
+    let currentQuery = '';
+    let isSidebarOpen = false;
+
+    // Toggle Sidebar
+    function toggleDonorsSidebar() {
+        const sidebar = document.getElementById('donors-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        isSidebarOpen = !isSidebarOpen;
+        
+        if (isSidebarOpen) {
+            sidebar.classList.remove('translate-x-full');
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.add('opacity-100'), 10);
+            loadDonors(1, currentQuery);
+            document.body.style.overflow = 'hidden';
+        } else {
+            sidebar.classList.add('translate-x-full');
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => overlay.classList.add('hidden'), 700);
+            document.body.style.overflow = '';
         }
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
+    }
+
+    // Load Donors via AJAX
+    async function loadDonors(page = 1, query = '') {
+        const listContainer = document.getElementById('donors-list');
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+        const pageInfo = document.getElementById('current-page-info');
+
+        // Loading state
+        if (page === 1 && !query) {
+             listContainer.innerHTML = '<div class="flex items-center justify-center h-full"><div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div></div>';
         }
 
-        // Airtel Availability Check
-        document.querySelector('select[name="provider"]').addEventListener('change', function() {
-            if (this.value === 'AIRTEL') {
-                alert("Airtel Money sera prochainement disponible. Veuillez utiliser MTN MoMo pour le moment. 😊");
-                this.value = 'MTN';
-            }
-        });
-
-        document.getElementById('payment-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submit-btn');
-            btn.disabled = true;
-            btn.innerText = 'Traitement...';
-
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            try {
-                const response = await fetch('{% url "api_initiate_payment" %}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    window.location.href = result.payment_link;
-                } else {
-                    alert('Erreur: ' + (result.error || 'Une erreur est survenue'));
-                    btn.disabled = false;
-                    btn.innerText = 'Confirmer le don';
+        try {
+            const response = await fetch(`?q=${query}&page=${page}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
-            } catch (error) {
-                console.error(error);
-                alert('Erreur de connexion au serveur');
+            });
+            const data = await response.json();
+
+            listContainer.innerHTML = data.html;
+            currentPage = data.current_page;
+            
+            // Update controls
+            prevBtn.disabled = !data.has_previous;
+            nextBtn.disabled = !data.has_next;
+            pageInfo.innerText = `Page ${data.current_page} sur ${data.total_pages}`;
+            
+            // Scroll to top of list
+            listContainer.scrollTop = 0;
+        } catch (error) {
+            console.error('Error loading donors:', error);
+            listContainer.innerHTML = '<p class="text-center text-red-500 font-bold">Erreur de chargement</p>';
+        }
+    }
+
+    // Search with Debounce
+    let searchTimeout;
+    document.getElementById('donor-search').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        currentQuery = e.target.value;
+        searchTimeout = setTimeout(() => {
+            loadDonors(1, currentQuery);
+        }, 500);
+    });
+
+    // Pagination Click
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) loadDonors(currentPage - 1, currentQuery);
+    });
+    document.getElementById('next-page').addEventListener('click', () => {
+        loadDonors(currentPage + 1, currentQuery);
+    });
+
+    // Payment Form Handler
+    document.getElementById('payment-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submit-btn');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = 'TRAITEMENT...';
+
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        try {
+            const response = await fetch('{% url "api_initiate_payment" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                window.location.href = result.payment_link;
+            } else {
+                alert('Erreur: ' + (result.error || 'Une erreur est survenue'));
                 btn.disabled = false;
-                btn.innerText = 'Confirmer le don';
+                btn.innerText = originalText;
             }
-        });
-    </script>
+        } catch (error) {
+            console.error(error);
+            alert('Erreur de connexion au serveur');
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    });
+
+    // Airtel Availability Check
+    document.querySelector('select[name="provider"]').addEventListener('change', function() {
+        if (this.value === 'AIRTEL') {
+            alert("Airtel Money sera prochainement disponible. Veuillez utiliser MTN MoMo pour le moment. 😊");
+            this.value = 'MTN';
+        }
+    });
+</script>
 {% endblock %}

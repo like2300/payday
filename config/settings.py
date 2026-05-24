@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'fundraisers.apps.FundraisersConfig',
     'payments.apps.PaymentsConfig',
     'reports.apps.ReportsConfig',
+    'votes.apps.VotesConfig',
 ]
 
 MIDDLEWARE = [
@@ -79,6 +80,9 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
             ],
+            'libraries': {
+                'anivpay_sidebar': 'core.templatetags.anivpay_sidebar',
+            },
         },
     },
 ]

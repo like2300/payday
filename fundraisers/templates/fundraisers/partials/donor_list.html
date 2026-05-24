@@ -1,0 +1,25 @@
+{% for txn in page_obj %}
+    <div class="p-6 bg-white/5 border border-white/10 rounded-[32px] animate-fadeIn group hover:bg-white/[0.08] transition-all duration-300">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <p class="text-lg font-black uppercase tracking-tighter text-white">{{ txn.donor_name|default:"Anonyme" }}</p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-white/20">{{ txn.created_at|date:"d M Y, H:i" }}</p>
+            </div>
+            <p class="text-xl font-black text-white">{{ txn.amount|floatformat:0 }} <span class="text-[10px] opacity-20">FCFA</span></p>
+        </div>
+        
+        {% if txn.message %}
+            <div class="relative mt-4 pt-4 border-t border-white/5">
+                <span class="material-icons absolute -top-3 left-4 bg-zinc-950 px-2 text-white/10 text-lg">format_quote</span>
+                <p class="text-sm text-white/60 leading-relaxed italic font-medium">
+                    {{ txn.message }}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+{% empty %}
+    <div class="py-12 text-center space-y-3">
+        <div class="text-4xl">🎁</div>
+        <p class="text-white font-medium">Aucun donateur trouvé</p>
+    </div>
+{% endfor %}

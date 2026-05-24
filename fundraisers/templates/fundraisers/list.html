@@ -33,64 +33,100 @@
 </form>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .fundraiser-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 2rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .fundraiser-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    .card-bg-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-cover: cover;
+        opacity: 0;
+        filter: blur(20px);
+        transform: scale(1.2);
+        transition: all 0.6s ease;
+        z-index: 0;
+    }
+    .fundraiser-card:hover .card-bg-image {
+        opacity: 0.15;
+        transform: scale(1);
+        filter: blur(10px);
+    }
+    .card-content {
+        position: relative;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
     {% for fundraiser in fundraisers %}
-        <a href="{{ fundraiser.get_absolute_url }}" class="group space-y-3 block">
-            <!-- Media Card -->
-            <div class="relative aspect-video rounded-2xl overflow-hidden bg-white/5 video-container">
-                {% if fundraiser.media_type == 'video' %}
-                    <!-- Thumbnail -->
-                    {% if fundraiser.thumbnail %}
-                        <img src="{{ fundraiser.thumbnail.url }}" class="w-full h-full object-cover group-hover:opacity-0 transition-opacity duration-300" alt="{{ fundraiser.title }}">
-                    {% else %}
-                        <div class="w-full h-full flex items-center justify-center bg-white/5 group-hover:opacity-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                            </svg>
+        <div class="fundraiser-card group">
+            {% if fundraiser.background_media %}
+                <img src="{{ fundraiser.background_media.url }}" class="card-bg-image" alt="">
+            {% endif %}
+            
+            <a href="{{ fundraiser.get_absolute_url }}" class="card-content block p-4">
+                <!-- Media Card -->
+                <div class="relative aspect-[4/3] rounded-3xl overflow-hidden bg-white/5 mb-6">
+                    {% if fundraiser.media_type == 'video' %}
+                        {% if fundraiser.thumbnail %}
+                            <img src="{{ fundraiser.thumbnail.url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="{{ fundraiser.title }}">
+                        {% endif %}
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                            <span class="material-icons text-white text-4xl">play_circle</span>
                         </div>
+                    {% else %}
+                        <img src="{{ fundraiser.background_media.url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="{{ fundraiser.title }}">
                     {% endif %}
-                    <!-- Hover Video -->
-                    <video muted loop playsinline class="absolute inset-0 w-full h-full object-cover" onmouseover="this.play()" onmouseout="this.pause(); this.currentTime = 0;">
-                        <source src="{{ fundraiser.background_media.url }}" type="video/mp4">
-                    </video>
-                {% else %}
-                    <img src="{{ fundraiser.background_media.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ fundraiser.title }}">
-                {% endif %}
 
-                <!-- Badges -->
-                <div class="absolute top-3 left-3 flex flex-col gap-2">
-                    <span class="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-white">
-                        {{ fundraiser.get_category_display }}
-                    </span>
-                    {% if fundraiser.target_amount and fundraiser.collected_amount >= fundraiser.target_amount %}
-                    <span class="px-3 py-1 bg-red-600 rounded-full text-[10px] font-bold uppercase tracking-wider text-white shadow-lg shadow-red-600/20">
-                        Clôturé
-                    </span>
-                    {% endif %}
+                    <!-- Badges -->
+                    <div class="absolute top-4 left-4">
+                        <span class="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-wider text-white border border-white/10">
+                            {{ fundraiser.get_category_display }}
+                        </span>
+                    </div>
                 </div>
 
-                <!-- Progress Overlay -->
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
-                    <div class="h-full bg-white transition-all duration-500" style="width: {{ fundraiser.get_progress_percentage }}%"></div>
-                </div>
-            </div>
-
-            <!-- Info -->
-            <div class="space-y-1 px-1">
-                <div class="flex justify-between items-start gap-4">
-                    <h3 class="font-bold text-white leading-tight line-clamp-2 group-hover:text-white/80 transition-colors">
+                <!-- Info -->
+                <div class="space-y-4 px-2">
+                    <h3 class="font-black text-xl text-white leading-tight line-clamp-2 tracking-tighter">
                         {{ fundraiser.title }}
                     </h3>
+                    
+                    <div class="flex items-center gap-3 text-white/40">
+                        <span class="material-icons text-sm">person</span>
+                        <p class="text-xs font-bold uppercase tracking-widest">{{ fundraiser.beneficiary_name }}</p>
+                    </div>
+
+                    <!-- Progress -->
+                    <div class="space-y-2">
+                        <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-white transition-all duration-1000" style="width: {{ fundraiser.get_progress_percentage }}%"></div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-xs font-black text-white">{{ fundraiser.collected_amount|floatformat:0 }} <span class="opacity-30">FCFA</span></p>
+                            <p class="text-[10px] font-black text-white/20 uppercase tracking-widest">{{ fundraiser.get_progress_percentage|floatformat:0 }}%</p>
+                        </div>
+                    </div>
                 </div>
-                <p class="text-white/40 text-sm font-medium">Pour {{ fundraiser.beneficiary_name }}</p>
-                <div class="flex items-center gap-2 pt-1">
-                    <span class="text-sm font-bold text-white">{{ fundraiser.collected_amount|floatformat:0 }} FCFA</span>
-                    <span class="text-white/20 text-xs">sur {{ fundraiser.target_amount|default:"--"|floatformat:0 }} FCFA</span>
-                </div>
-            </div>
-        </a>
+            </a>
+        </div>
     {% empty %}
         <div class="col-span-full py-20 text-center space-y-4">
             <div class="text-6xl">🔍</div>

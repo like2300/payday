@@ -34,16 +34,48 @@ def fundraiser_list(request):
     }
     return render(request, 'fundraisers/list.html', context)
 
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.core.paginator import Paginator
+
 def fundraiser_detail(request, slug):
     """
     Public view for a specific fundraiser collection page.
     """
     fundraiser = get_object_or_404(Fundraiser, slug=slug, is_active=True)
-    transactions = fundraiser.transactions.filter(status='completed').order_by('-completed_at')
     
+    # Handle AJAX request for donors
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        query = request.GET.get('q', '')
+        page_number = request.GET.get('page', 1)
+        
+        transactions = fundraiser.transactions.filter(status='completed').order_by('-completed_at')
+        
+        if query:
+            transactions = transactions.filter(
+                Q(donor_name__icontains=query) |
+                Q(message__icontains=query)
+            )
+            
+        paginator = Paginator(transactions, 10) # 10 donors per page
+        page_obj = paginator.get_page(page_number)
+        
+        donors_html = render_to_string('fundraisers/partials/donor_list.html', {
+            'page_obj': page_obj,
+            'fundraiser': fundraiser
+        })
+        
+        return JsonResponse({
+            'html': donors_html,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'current_page': page_obj.number,
+            'total_pages': paginator.num_pages
+        })
+
     context = {
         'fundraiser': fundraiser,
-        'transactions': transactions,
+        'hide_sidebar': True,
     }
     return render(request, 'fundraisers/detail.html', context)
 

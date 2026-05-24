@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tosounga | Tous les votes{% endblock %}
+
+{% block header_content %}
+<!-- Search & Filters -->
+<form action="{% url 'vote_list' %}" method="GET" class="flex items-center gap-3 w-full md:w-auto">
+    <div class="relative w-full md:w-80 group">
+        <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-white transition-colors">search</span>
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Rechercher un vote..." 
+               class="w-full bg-white/5 border border-white/10 rounded-full px-12 py-2 text-sm focus:outline-none focus:border-white/30 transition-all text-white">
+    </div>
+    
+    {% if search_query or selected_category %}
+        <a href="{% url 'vote_list' %}" class="text-white/40 hover:text-white transition-colors p-2 bg-white/5 rounded-full">
+            <span class="material-icons text-sm">close</span>
+        </a>
+    {% endif %}
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-12">
+    <!-- Category Pills -->
+    <div class="flex flex-wrap items-center gap-3">
+        <a href="{% url 'vote_list' %}" 
+           class="px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all border 
+           {% if not selected_category %}bg-white text-black border-white{% else %}bg-white/5 text-white/40 border-white/10 hover:text-white hover:border-white/20{% endif %}">
+            Tous
+        </a>
+        {% for cat_val, cat_name in categories %}
+            <a href="?category={{ cat_val }}{% if search_query %}&q={{ search_query }}{% endif %}" 
+               class="px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all border 
+               {% if selected_category == cat_val %}bg-white text-black border-white{% else %}bg-white/5 text-white/40 border-white/10 hover:text-white hover:border-white/20{% endif %}">
+                {{ cat_name }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {% for session in sessions %}
+            <div class="fundraiser-card group">
+                {% if session.background_image %}
+                    <img src="{{ session.background_image.url }}" class="card-bg-image" alt="">
+                {% endif %}
+                
+                <a href="{{ session.get_absolute_url }}" class="card-content block p-4">
+                    <div class="relative aspect-[16/9] rounded-3xl overflow-hidden bg-white/5 mb-6">
+                        {% if session.background_image %}
+                            <img src="{{ session.background_image.url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="{{ session.title }}">
+                        {% else %}
+                            <div class="w-full h-full bg-white/5 flex items-center justify-center">
+                                <span class="material-icons text-white/20 text-4xl">how_to_reg</span>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Top Badges -->
+                        <div class="absolute top-4 left-4 flex gap-2">
+                            <span class="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-wider text-white border border-white/10">
+                                {{ session.get_category_display }}
+                            </span>
+                            {% if session.vote_price > 0 %}
+                                <span class="px-3 py-1 bg-amber-500/80 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-wider text-black border border-white/10">
+                                    {{ session.vote_price|floatformat:0 }} FCFA
+                                </span>
+                            {% else %}
+                                <span class="px-3 py-1 bg-green-500/80 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-wider text-white border border-white/10">
+                                    Gratuit
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 px-2">
+                        <div class="flex items-center gap-2">
+                            {% if session.organizer_image %}
+                                <img src="{{ session.organizer_image.url }}" class="w-5 h-5 rounded-full object-cover" alt="">
+                            {% endif %}
+                            <p class="text-[10px] font-black text-white/40 uppercase tracking-widest">{{ session.organizer_name }}</p>
+                            {% if session.is_verified %}
+                                <span class="material-icons text-blue-400 text-[12px]">verified</span>
+                            {% endif %}
+                        </div>
+
+                        <h3 class="font-black text-xl text-white leading-tight line-clamp-2 tracking-tighter">
+                            {{ session.title }}
+                        </h3>
+                        <p class="text-white/40 text-sm line-clamp-2">{{ session.description }}</p>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <div class="col-span-full py-20 text-center space-y-4">
+                <div class="text-6xl">🗳️</div>
+                <p class="text-white/60 text-lg">Aucune session de vote trouvée.</p>
+                <a href="{% url 'vote_list' %}" class="inline-block text-white font-bold border-b border-white hover:text-white/80 transition-all">Voir tout</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .fundraiser-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 2rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .fundraiser-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    .card-bg-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        filter: blur(20px);
+        transform: scale(1.2);
+        transition: all 0.6s ease;
+        z-index: 0;
+    }
+    .fundraiser-card:hover .card-bg-image {
+        opacity: 0.15;
+        transform: scale(1);
+        filter: blur(10px);
+    }
+    .card-content {
+        position: relative;
+        z-index: 10;
+    }
+</style>
+{% endblock %}

@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from fundraisers.views import fundraiser_detail, payment_success, fundraiser_list
+from votes.views import vote_list, vote_detail, initiate_vote
 from payments.views import openpay_webhook
 from payments.api_views import initiate_payment
 from reports.views import export_transactions_excel
@@ -55,6 +56,11 @@ urlpatterns = [
     path('f/<slug:slug>/', fundraiser_detail, name='fundraiser_detail'),
     path('payment-success/', payment_success, name='payment_success'),
     path('payment-success/<slug:slug>/', payment_success, name='payment_success_with_slug'),
+    
+    # Votes
+    path('votes/', vote_list, name='vote_list'),
+    path('votes/<slug:slug>/', vote_detail, name='vote_detail'),
+    path('votes/initiate/<int:candidate_id>/', initiate_vote, name='initiate_vote'),
     
     # Payments API & Webhooks
     path('api/payment/initiate/', initiate_payment, name='api_initiate_payment'),
