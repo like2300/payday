@@ -7,6 +7,7 @@ from votes.views import vote_list, vote_detail, initiate_vote
 from payments.views import openpay_webhook
 from payments.api_views import initiate_payment
 from reports.views import export_transactions_excel
+from core.views import toggle_like, user_profile, global_search
 
 from django.views.generic import TemplateView
 from django.http import HttpResponse
@@ -51,6 +52,13 @@ urlpatterns = [
     path('manifest.json', TemplateView.as_view(template_name="manifest.json", content_type='application/json'), name='manifest.json'),
     path('sw.js', TemplateView.as_view(template_name="sw.js", content_type='application/javascript'), name='sw.js'),
     
+    # Authentication
+    path('accounts/', include('allauth.urls')),
+    path('profile/<int:user_id>/', user_profile, name='user_profile'),
+    
+    # Surveys (Sondages)
+    path('surveys/', include('surveys.urls')),
+    
     # Fundraising Pages
     path('', fundraiser_list, name='fundraiser_list'),
     path('f/<slug:slug>/', fundraiser_detail, name='fundraiser_detail'),
@@ -64,6 +72,8 @@ urlpatterns = [
     
     # Payments API & Webhooks
     path('api/payment/initiate/', initiate_payment, name='api_initiate_payment'),
+    path('api/toggle-like/', toggle_like, name='toggle_like'),
+    path('api/search/', global_search, name='global_search'),
     path('openpay/callback', openpay_webhook, name='openpay_callback'),
     
     # Reports
@@ -74,6 +84,14 @@ urlpatterns = [
 handler404 = 'config.views.error_404'
 handler500 = 'config.views.error_500'
 handler403 = 'config.views.error_403'
+
+from django.views.static import serve
+from django.urls import re_path
+
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

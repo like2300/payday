@@ -35,8 +35,38 @@ def openpay_webhook(request):
             logger.error(f"Missing external_id in webhook data: {data}")
             return JsonResponse({'error': 'Missing external_id'}, status=400)
             
+        # Handle VoteRecord
+        if isinstance(external_id, str) and external_id.startswith('vote_'):
+            try:
+                from votes.models import VoteRecord
+                record_id = external_id.replace('vote_', '')
+                vote_record = VoteRecord.objects.get(id=record_id)
+            except (VoteRecord.DoesNotExist, ValueError):
+                logger.error(f"VoteRecord {external_id} not found for webhook.")
+                return JsonResponse({'error': 'VoteRecord not found'}, status=404)
+            
+            is_success = openpay_status in ['COMPLETED', 'paid', 'success', 'SUCCESS']
+            if is_success:
+                if vote_record.status != 'completed':
+                    vote_record.status = 'completed'
+                    if openpay_transaction_id:
+                        vote_record.openpay_transaction_id = openpay_transaction_id
+                    vote_record.save()
+                    
+                    # Increment choice vote count
+                    choice = vote_record.choice
+                    choice.vote_count += 1
+                    choice.save()
+                    logger.info(f"VoteRecord {record_id} completed. Choice {choice.id} updated.")
+            elif openpay_status in ['FAILED', 'failed', 'error']:
+                vote_record.status = 'failed'
+                vote_record.save()
+                logger.warning(f"VoteRecord {record_id} failed.")
+                
+            return HttpResponse(status=200)
+
+        # Handle Transaction (Fundraiser)
         try:
-            # external_id is usually the PK (int) in our DB
             transaction = Transaction.objects.get(id=external_id)
         except (Transaction.DoesNotExist, ValueError):
             logger.error(f"Transaction {external_id} not found for webhook.")
@@ -59,6 +89,12 @@ def openpay_webhook(request):
                 # Force refresh from DB to avoid race conditions
                 fundraiser.refresh_from_db()
                 fundraiser.collected_amount += transaction.amount
+                
+                # Automatically deactivate if target reached
+                if fundraiser.target_amount and fundraiser.collected_amount >= fundraiser.target_amount:
+                    fundraiser.is_active = False
+                    logger.info(f"Fundraiser {fundraiser.id} reached target. Deactivating.")
+                
                 fundraiser.save()
                 logger.info(f"Transaction {external_id} completed. Fundraiser {fundraiser.id} updated.")
         

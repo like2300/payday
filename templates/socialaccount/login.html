@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load socialaccount %}
+
+{% block title %}{% trans "Sign In" %} - Haram{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-4">
+    <div class="w-full max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div class="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-[3rem] p-8 md:p-12 shadow-2xl backdrop-blur-3xl text-center space-y-8">
+            
+            <!-- Icon/Logo -->
+            <div class="flex justify-center">
+                <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 via-blue-400 to-indigo-600 rounded-full p-1 shadow-xl">
+                    <div class="w-full h-full bg-[var(--bg-surface)] rounded-full flex items-center justify-center">
+                        <span class="material-icons text-3xl text-[var(--text-main)]">account_circle</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h1 class="text-3xl font-black text-[var(--text-main)] tracking-tighter uppercase">
+                    {% blocktrans with provider.name as provider_name %}Connexion avec {{ provider_name }}{% endblocktrans %}
+                </h1>
+                <p class="text-[var(--text-muted)] text-sm font-medium">
+                    {% blocktrans with provider.name as provider_name %}Vous êtes sur le point d'utiliser votre compte {{ provider_name }} pour vous connecter à Haram.{% endblocktrans %}
+                </p>
+            </div>
+
+            <form method="post" class="pt-4">
+                {% csrf_token %}
+                <button type="submit" class="w-full py-5 bg-[#0095F6] hover:bg-[#1877F2] text-white rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-blue-500/20 active:scale-95">
+                    {% trans "Continuer vers Google" %}
+                </button>
+            </form>
+
+            <div class="pt-4">
+                <a href="/" class="text-[10px] font-black text-[var(--text-muted)] hover:text-[var(--text-main)] uppercase tracking-[0.2em] transition-colors">
+                    Annuler et retourner à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

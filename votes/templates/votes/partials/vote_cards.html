@@ -1,0 +1,10 @@
+{% for session in sessions %}
+    <div class="reveal-card {% if forloop.last and sessions.has_next %}last-card{% endif %}"
+         {% if forloop.last and sessions.has_next %}
+         hx-get="{% url 'vote_list' %}?page={{ sessions.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+         hx-trigger="revealed"
+         hx-swap="afterend"
+         {% endif %}>
+        {% include "partials/immersive_card.html" with obj=session image_url=session.background_image author_image=session.organizer_image badge=session.get_category_display prefix="Prix:" title=session.vote_price|floatformat:0 subtitle=session.title stat1_val=session.choices.count stat1_label="Options" stat2_val=session.total_votes|default:0 stat2_label="Votes" author=session.organizer_name author_prefix="Organisé par" time=session.created_at|timesince link_url=session.get_absolute_url btn_label="Vote" %}
+    </div>
+{% endfor %}

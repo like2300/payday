@@ -4,4 +4,4 @@ from django.apps import AppConfig
 class CoreConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'core'
-    verbose_name = 'Gestion PayDay'
+    verbose_name = 'Gestion Haram'

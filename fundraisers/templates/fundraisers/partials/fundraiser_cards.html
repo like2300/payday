@@ -1,0 +1,10 @@
+{% for fundraiser in fundraisers %}
+    <div class="reveal-card {% if forloop.last and fundraisers.has_next %}last-card{% endif %}"
+         {% if forloop.last and fundraisers.has_next %}
+         hx-get="{% url 'fundraiser_list' %}?page={{ fundraisers.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+         hx-trigger="revealed"
+         hx-swap="afterend"
+         {% endif %}>
+        {% include "partials/immersive_card.html" with obj=fundraiser image_url=fundraiser.background_media author_image=fundraiser.beneficiary_image badge=fundraiser.get_category_display prefix="Collecté:" title=fundraiser.collected_amount|floatformat:0 subtitle=fundraiser.title stat1_val=fundraiser.get_progress_percentage|floatformat:0 stat1_label="%" stat2_val=fundraiser.completed_transactions_count stat2_label="Dons" author=fundraiser.beneficiary_name time=fundraiser.created_at|timesince link_url=fundraiser.get_absolute_url btn_label="Un Don" %}
+    </div>
+{% endfor %}

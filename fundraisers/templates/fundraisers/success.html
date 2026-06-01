@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Merci ! | PayDay{% endblock %}
+{% block title %}Merci ! | Haram{% endblock %}
 
 {% block body_class %}h-screen flex items-center justify-center overflow-hidden{% endblock %}
 
@@ -29,29 +29,29 @@
 {% endblock %}
 
 {% block content %}
-    <div class="fixed inset-0 -z-10 bg-black">
-        <div class="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-black to-black"></div>
+    <div class="fixed inset-0 -z-10 bg-[var(--bg-app)] transition-colors duration-300">
+        <div class="absolute inset-0 bg-gradient-to-b from-[var(--accent-primary)]/10 via-transparent to-transparent opacity-50"></div>
     </div>
 
-    <div class="w-full max-w-lg mx-auto text-center">
-        <div class="glass rounded-[40px] p-12 space-y-8 animate-slide-up">
+    <div class="w-full max-w-lg mx-auto text-center px-6">
+        <div class="glass bg-[var(--bg-surface)] border-[var(--border-subtle)] rounded-[40px] p-8 md:p-12 space-y-8 animate-slide-up shadow-2xl">
             <div class="space-y-4">
-                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="w-20 h-20 bg-[var(--text-main)] rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-[var(--bg-app)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h1 class="text-4xl font-bold text-white tracking-tight">Merci beaucoup !</h1>
-                <p class="text-white/60 text-lg">Votre participation a bien été enregistrée. Vous contribuez à rendre ce moment inoubliable.</p>
+                <h1 class="text-4xl font-black text-[var(--text-main)] tracking-tighter uppercase">Merci beaucoup !</h1>
+                <p class="text-[var(--text-muted)] text-lg font-medium">Votre contribution a bien été enregistrée. Vous faites la différence.</p>
             </div>
 
             <div class="pt-4">
                 {% if fundraiser_slug %}
-                <a href="{% url 'fundraiser_detail' fundraiser_slug %}" class="inline-block w-full py-4 px-8 bg-white text-black font-bold rounded-2xl hover:bg-white/90 transition-all duration-300">
+                <a href="{% url 'fundraiser_detail' fundraiser_slug %}" class="inline-block w-full py-5 px-8 bg-[var(--accent-primary)] text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-[var(--accent-hover)] transition-all shadow-xl shadow-[var(--accent-primary)]/20 active:scale-95">
                     Retour à la collecte
                 </a>
                 {% else %}
-                <a href="{% url 'fundraiser_list' %}" class="inline-block w-full py-4 px-8 bg-white text-black font-bold rounded-2xl hover:bg-white/90 transition-all duration-300">
+                <a href="{% url 'fundraiser_list' %}" class="inline-block w-full py-5 px-8 bg-[var(--text-main)] text-[var(--bg-app)] font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 transition-all shadow-xl active:scale-95">
                     Retour à l'accueil
                 </a>
                 {% endif %}

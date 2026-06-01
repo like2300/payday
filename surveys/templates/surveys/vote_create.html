@@ -1,0 +1,560 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Créer un Vote - Haram{% endblock %}
+
+{% block extra_css %}
+    :root {
+        --step-active: var(--accent-primary);
+        --step-pending: var(--border-subtle);
+        --step-completed: #10b981;
+    }
+
+    .step-container { display: none; }
+    .step-container.active { display: block; }
+
+    /* Timeline Style */
+    .timeline {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin-bottom: 3rem;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--border-subtle);
+        z-index: 0;
+        transform: translateY(-50%);
+    }
+    .timeline-progress {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        height: 2px;
+        background: var(--accent-primary);
+        z-index: 1;
+        transform: translateY(-50%);
+        transition: width 0.5s ease;
+        width: 0%;
+    }
+    .step-node {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--bg-surface);
+        border: 2px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        font-weight: 800;
+        transition: all 0.3s ease;
+        color: var(--text-muted);
+        position: relative;
+    }
+    .step-node.active {
+        border-color: var(--accent-primary);
+        background: var(--accent-primary);
+        color: white;
+        box-shadow: 0 0 15px rgba(0, 149, 246, 0.3);
+    }
+    .step-node.completed {
+        border-color: var(--step-completed);
+        background: var(--step-completed);
+        color: white;
+    }
+    .step-label {
+        position: absolute;
+        top: 50px;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        white-space: nowrap;
+        color: var(--text-muted);
+    }
+    .step-node.active .step-label { color: var(--text-main); }
+
+    /* Drag & Drop Style */
+    .drop-zone {
+        border: 2px dashed var(--border-subtle);
+        border-radius: 2rem;
+        padding: 3rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--bg-surface-alt);
+        position: relative;
+        overflow: hidden;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+        border-color: var(--accent-primary);
+        background: var(--accent-soft);
+    }
+    .drop-zone input { display: none; }
+    .preview-img {
+        width: 100%;
+        height: 200px;
+        object-cover: cover;
+        border-radius: 1.5rem;
+        display: none;
+    }
+
+    /* Form Fields */
+    .form-group { margin-bottom: 1.5rem; }
+    .field-label {
+        display: block;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        margin-left: 1rem;
+    }
+    .input-premium {
+        width: 100%;
+        background: var(--bg-surface-alt);
+        border: 2px solid #e5e7eb;
+        border-radius: 1.25rem;
+        padding: 1.25rem 1.5rem;
+        color: var(--text-main);
+        font-weight: 600;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .dark .input-premium {
+        border-color: #374151;
+    }
+    .input-premium:focus {
+        border-color: var(--accent-primary);
+        background: var(--bg-surface);
+        outline: none;
+        box-shadow: 0 0 0 4px var(--accent-soft);
+        transform: translateY(-2px);
+    }
+
+    .choice-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: 2rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    .choice-card:hover { border-color: var(--accent-primary); }
+
+    .nav-btn {
+        padding: 1.25rem 2.5rem;
+        border-radius: 1.25rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 11px;
+        transition: all 0.3s ease;
+    }
+    .btn-next { background: var(--accent-primary); color: white; }
+    .btn-prev { background: var(--bg-surface-alt); color: var(--text-muted); }
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <div class="text-center mb-16 space-y-4">
+        <h1 class="text-5xl font-black text-[var(--text-main)] tracking-tighter uppercase">
+            {{ title }}
+        </h1>
+        <p class="text-[var(--text-muted)] font-black uppercase tracking-widest text-[10px]">Lancez votre session de vote en 4 étapes</p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline px-10">
+        <div class="timeline-progress" id="progress-bar"></div>
+        <div class="step-node active" data-step="1">1 <span class="step-label">Base</span></div>
+        <div class="step-node" data-step="2">2 <span class="step-label">Médias</span></div>
+        <div class="step-node" data-step="3">3 <span class="step-label">Candidats</span></div>
+        <div class="step-node" data-step="4">4 <span class="step-label">Fin</span></div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="multi-step-form" class="mt-20">
+        {% csrf_token %}
+
+        <!-- Step 1: Basic Info -->
+        <div class="step-container active" id="step-1">
+            <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-8 md:p-12 shadow-2xl space-y-8">
+                <div class="form-group">
+                    <label class="field-label">Titre du Vote</label>
+                    <input type="text" name="title" class="input-premium" placeholder="Ex: Meilleur Artiste 2026" required value="{{ form.title.value|default:'' }}">
+                    {{ form.title.errors }}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="form-group">
+                        <label class="field-label">Catégorie</label>
+                        <select name="category" class="input-premium">
+                            {% for val, name in form.fields.category.choices %}
+                                <option value="{{ val }}" {% if form.category.value == val %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Prix du Vote (FCFA)</label>
+                        <input type="number" name="vote_price" class="input-premium" placeholder="0 pour gratuit" value="{{ form.vote_price.value|default:'0' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Description</label>
+                    <textarea name="description" rows="4" class="input-premium" placeholder="Expliquez l'objectif de ce vote...">{{ form.description.value|default:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Media & Settings -->
+        <div class="step-container" id="step-2">
+            <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-8 md:p-12 shadow-2xl space-y-8">
+                <div class="form-group">
+                    <label class="field-label">Image d'Arrière-plan</label>
+                    <div class="drop-zone" id="bg-drop-zone">
+                        <div class="dz-message space-y-4" {% if form.instance.background_image %}style="display:none"{% endif %}>
+                            <span class="material-icons text-5xl text-[var(--accent-primary)]">cloud_upload</span>
+                            <p class="text-xs font-black uppercase tracking-widest">Glissez l'image ici ou cliquez</p>
+                            <p class="text-[9px] text-[var(--text-muted)]">PNG, JPG ou WEBP (Max. 5MB)</p>
+                        </div>
+                        <input type="file" name="background_image" id="bg-input" accept="image/*">
+                        <img src="{% if form.instance.background_image %}{{ form.instance.background_image.url }}{% endif %}" class="preview-img" id="bg-preview" {% if form.instance.background_image %}style="display:block"{% endif %}>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Date de Fin</label>
+                    <input type="datetime-local" name="end_date" class="input-premium" value="{{ form.end_date.value|date:'Y-m-d\TH:i' }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Choices (Formset) -->
+        <div class="step-container" id="step-3">
+            {{ formset.management_form }}
+            <div id="choices-container" class="space-y-8">
+                {% for fs_form in formset %}
+                <div class="choice-card choice-form-row">
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="flex items-center gap-4">
+                            <span class="w-8 h-8 rounded-full bg-[var(--accent-soft)] text-[var(--accent-primary)] flex items-center justify-center font-black text-xs row-number">{{ forloop.counter }}</span>
+                            <h3 class="font-black uppercase tracking-tight text-[var(--text-main)]">Option / Candidat</h3>
+                        </div>
+                        {% if fs_form.instance.pk and formset.can_delete %}
+                            <div class="flex items-center gap-2">
+                                {{ fs_form.DELETE }}
+                                <label class="text-[9px] font-black uppercase text-red-500">Supprimer</label>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div class="form-group">
+                                <label class="field-label">Nom de l'option</label>
+                                {{ fs_form.name }}
+                            </div>
+                            <div class="form-group">
+                                <label class="field-label">Description (Optionnel)</label>
+                                {{ fs_form.description }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="field-label">Photo du candidat</label>
+                            <div class="drop-zone choice-drop-zone">
+                                <div class="dz-message space-y-2" {% if fs_form.instance.image %}style="display:none"{% endif %}>
+                                    <span class="material-icons text-3xl text-[var(--text-muted)]">add_a_photo</span>
+                                    <p class="text-[8px] font-black uppercase tracking-widest">Ajouter une photo</p>
+                                </div>
+                                {{ fs_form.image }}
+                                <img src="{% if fs_form.instance.image %}{{ fs_form.instance.image.url }}{% endif %}" class="preview-img" {% if fs_form.instance.image %}style="display:block"{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+                    {% for hidden in fs_form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Dynamic Add Button -->
+            <div class="mt-8 flex justify-center">
+                <button type="button" onclick="addChoiceRow()" class="flex items-center gap-2 px-8 py-4 bg-[var(--bg-surface-alt)] border border-[var(--border-subtle)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                    <span class="material-icons text-sm">add_circle</span>
+                    Ajouter une option
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 4: Summary & Rules -->
+        <div class="step-container" id="step-4">
+            <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-8 md:p-12 shadow-2xl text-center space-y-8">
+                <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="material-icons text-4xl">check_circle</span>
+                </div>
+                <h2 class="text-3xl font-black text-[var(--text-main)] uppercase tracking-tight">Prêt à publier ?</h2>
+                <p class="text-[var(--text-muted)] text-sm max-w-md mx-auto">Vérifiez bien toutes les informations. Une fois publié, les utilisateurs pourront voter immédiatement.</p>
+                
+                <div class="bg-[var(--bg-surface-alt)] p-6 rounded-2xl text-left space-y-4">
+                    <div class="flex justify-between border-b border-[var(--border-subtle)] pb-2">
+                        <span class="text-[9px] font-black uppercase text-[var(--text-muted)]">Titre</span>
+                        <span class="text-[9px] font-black uppercase text-[var(--text-main)]" id="sum-title">-</span>
+                    </div>
+                    <div class="flex justify-between border-b border-[var(--border-subtle)] pb-2">
+                        <span class="text-[9px] font-black uppercase text-[var(--text-muted)]">Prix</span>
+                        <span class="text-[9px] font-black uppercase text-[var(--text-main)]" id="sum-price">-</span>
+                    </div>
+                </div>
+
+                <!-- Conditions d'utilisation -->
+                <div class="bg-[var(--bg-surface-alt)] p-6 rounded-[2rem] border border-[var(--border-subtle)] space-y-4 text-left">
+                    <h2 class="text-xl font-black text-[var(--text-main)] uppercase tracking-tight flex items-center gap-2">
+                        <span class="material-icons text-orange-500">gavel</span>
+                        Règles & Conditions
+                    </h2>
+                    
+                    <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-4 h-48 overflow-y-auto text-xs space-y-4 custom-scrollbar">
+                        {% for rule in rules %}
+                            <div class="rule-item">
+                                <h3 class="font-black text-[var(--text-main)] uppercase mb-1">{{ rule.title }}</h3>
+                                <div class="text-[var(--text-muted)] leading-relaxed">{{ rule.content|linebreaksbr }}</div>
+                            </div>
+                        {% empty %}
+                            <p class="text-[var(--text-muted)] italic">Aucune règle spécifique définie pour le moment.</p>
+                        {% endfor %}
+                    </div>
+
+                    <label class="flex items-center gap-3 cursor-pointer group mt-4">
+                        <input type="checkbox" id="terms-checkbox" class="w-5 h-5 rounded border-2 border-[var(--border-subtle)] text-[var(--accent-primary)] focus:ring-[var(--accent-soft)] transition-all cursor-pointer">
+                        <span class="text-[10px] font-black uppercase text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors">
+                            J'ai lu et j'accepte les conditions d'utilisation de Haram
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+    <!-- Navigation -->
+    <div class="flex justify-between mt-12 px-4">
+        <button type="button" class="nav-btn btn-prev" id="prevBtn" onclick="nextPrev(-1)">Précédent</button>
+        <button type="button" class="nav-btn btn-next" id="nextBtn" onclick="nextPrev(1)">Suivant</button>
+    </div>
+
+    <!-- Back to Dashboard -->
+    <div class="text-center mt-20">
+        <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors text-[10px] font-black uppercase tracking-widest">
+            <span class="material-icons text-sm">arrow_back</span>
+            Retour au tableau de bord
+        </a>
+    </div>
+</div>
+
+<script>
+    let currentStep = 1;
+    const totalSteps = 4;
+
+    // Formset Management
+    const choicesContainer = document.getElementById('choices-container');
+    const totalForms = document.querySelector('#id_choices-TOTAL_FORMS');
+
+    function addChoiceRow() {
+        const rows = document.getElementsByClassName('choice-form-row');
+        const currentCount = rows.length;
+        const newRow = rows[0].cloneNode(true);
+        
+        // Update indices in the new row
+        const formRegex = new RegExp(`choices-(\\d)-`, 'g');
+        newRow.innerHTML = newRow.innerHTML.replace(formRegex, `choices-${currentCount}-`);
+        
+        // Reset ALL values (Crucial: including hidden ID fields so Django treats them as NEW)
+        newRow.querySelectorAll('input, textarea').forEach(input => {
+            input.value = '';
+            if (input.type === 'checkbox') input.checked = false;
+        });
+        
+        // Remove DELETE checkbox container if it was cloned from an existing instance
+        const deleteContainer = newRow.querySelector('.flex.items-center.gap-2');
+        if (deleteContainer && deleteContainer.innerHTML.includes('DELETE')) {
+            deleteContainer.remove();
+        }
+        
+        // Reset preview and messages
+        const preview = newRow.querySelector('.preview-img');
+        const message = newRow.querySelector('.dz-message');
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+        if (message) message.style.display = 'block';
+        
+        // Update number label
+        newRow.querySelector('.row-number').innerText = currentCount + 1;
+        
+        // Setup drop zone for new row
+        setupDropZone(newRow.querySelector('.choice-drop-zone'));
+        
+        choicesContainer.appendChild(newRow);
+        totalForms.value = currentCount + 1;
+    }
+
+    function setupDropZone(zone) {
+        if (!zone) return;
+        const input = zone.querySelector('input[type="file"]');
+        const preview = zone.querySelector('.preview-img');
+        const message = zone.querySelector('.dz-message');
+
+        zone.onclick = () => input.click();
+        
+        input.onchange = () => {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    message.style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+    }
+
+    function showStep(n) {
+        const steps = document.getElementsByClassName("step-container");
+        steps[n-1].classList.add("active");
+        
+        // Buttons
+        document.getElementById("prevBtn").style.visibility = (n == 1) ? "hidden" : "visible";
+        if (n == totalSteps) {
+            document.getElementById("nextBtn").innerHTML = "Publier Maintenant";
+        } else {
+            document.getElementById("nextBtn").innerHTML = "Suivant";
+        }
+
+        // Timeline
+        updateTimeline(n);
+    }
+
+    function nextPrev(n) {
+        const steps = document.getElementsByClassName("step-container");
+        
+        // Validation (optional)
+        if (n == 1 && !validateStep()) return false;
+
+        steps[currentStep-1].classList.remove("active");
+        currentStep = currentStep + n;
+
+        if (currentStep > totalSteps) {
+            document.getElementById("multi-step-form").submit();
+            return false;
+        }
+
+        if (currentStep === 4) {
+            updateSummary();
+        }
+
+        showStep(currentStep);
+    }
+
+    function validateStep() {
+        // Simple required validation for step 1
+        if (currentStep === 1) {
+            const title = document.querySelector('input[name="title"]').value;
+            if (!title) {
+                alert("Le titre est obligatoire");
+                return false;
+            }
+        }
+        if (currentStep === 4) {
+            const checkbox = document.getElementById('terms-checkbox');
+            if (!checkbox.checked) {
+                alert("Vous devez accepter les conditions d'utilisation pour continuer.");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function updateTimeline(n) {
+        const nodes = document.getElementsByClassName("step-node");
+        const progress = document.getElementById("progress-bar");
+        
+        if (progress) {
+            progress.style.width = ((n - 1) / (totalSteps - 1) * 100) + "%";
+        }
+
+        for (let i = 0; i < nodes.length; i++) {
+            nodes[i].classList.remove("active", "completed");
+            if (i < n - 1) nodes[i].classList.add("completed");
+            if (i === n - 1) nodes[i].classList.add("active");
+        }
+    }
+
+    function updateSummary() {
+        const sumTitle = document.getElementById('sum-title');
+        const sumPrice = document.getElementById('sum-price');
+        if (sumTitle) sumTitle.innerText = document.querySelector('input[name="title"]').value;
+        if (sumPrice) sumPrice.innerText = document.querySelector('input[name="vote_price"]').value + " FCFA";
+    }
+
+    // Drag & Drop Handling for main background
+    function setupDragAndDrop(dropZoneId, inputId, previewId) {
+        const dropZone = document.getElementById(dropZoneId);
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+
+        if (!dropZone || !input) return;
+
+        dropZone.addEventListener('click', () => input.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        ['dragleave', 'dragend'].forEach(type => {
+            dropZone.addEventListener(type, () => dropZone.classList.remove('drag-over'));
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                input.files = e.dataTransfer.files;
+                updatePreview(input, preview, dropZone);
+            }
+        });
+
+        input.addEventListener('change', () => {
+            updatePreview(input, preview, dropZone);
+        });
+    }
+
+    function updatePreview(input, preview, dropZone) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                const msg = dropZone.querySelector('.dz-message');
+                if (msg) msg.style.display = 'none';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Initialize
+    setupDragAndDrop('bg-drop-zone', 'bg-input', 'bg-preview');
+    document.querySelectorAll('.choice-drop-zone').forEach(setupDropZone);
+
+    // Initial step
+    showStep(currentStep);
+</script>
+{% endblock %}

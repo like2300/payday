@@ -44,6 +44,11 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
     
     # Local apps
     'core.apps.CoreConfig',
@@ -51,7 +56,38 @@ INSTALLED_APPS = [
     'payments.apps.PaymentsConfig',
     'reports.apps.ReportsConfig',
     'votes.apps.VotesConfig',
+    'surveys.apps.SurveysConfig',
 ]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": config('GOOGLE_CLIENT_ID', default=''),
+            "secret": config('GOOGLE_CLIENT_SECRET', default=''),
+            "key": "",
+        },
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+    }
+}
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_EMAIL_REQUIRED = True # Requis pour certaines versions mais deprecation possible
+ACCOUNT_EMAIL_VERIFICATION = 'none' # For prototype, change in production
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -61,6 +97,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -92,8 +129,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # --- Django Unfold Configuration ---
 UNFOLD = {
-    "SITE_TITLE": "Tosounga Admin",
-    "SITE_HEADER": "Tosounga",
+    "SITE_TITLE": "Haram Admin",
+    "SITE_HEADER": "Haram",
     "SITE_URL": "/",
     "SITE_ICON": None,  # You can add a path to an icon if available
     "COLORS": {
@@ -111,6 +148,9 @@ UNFOLD = {
             "950": "9 9 11",
         },
     },
+    "STYLES": [
+        lambda request: "/static/css/admin_custom.css",
+    ],
     "SIDEBAR": {
         "show_search": True,
         "show_all_applications": True,
@@ -160,6 +200,17 @@ UNFOLD = {
                         "title": "Records de vote",
                         "icon": "poll",
                         "link": "/admin/votes/voterecord/",
+                    },
+                ],
+            },
+            {
+                "title": "Gestion Financière",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Demandes de Retrait",
+                        "icon": "payments",
+                        "link": "/admin/surveys/withdrawalrequest/",
                     },
                 ],
             },
@@ -233,6 +284,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Whitenoise storage for production (compression and caching)
+WHITENOISE_MAX_AGE = 31536000 # 1 year cache
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -275,7 +327,7 @@ SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
 CORS_ALLOW_ALL_ORIGINS = True # Change in production
 
 # CSRF Trusted Origins for HTTPS
-CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://omerpay.share.zrok.io').split(',')
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='http://localhost:8000,http://127.0.0.1:8000').split(',')
 
 # HTTPS Security Settings for Tunnels (zrok/ngrok)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -287,8 +339,12 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = "same-origin"
-    # CSRF_COOKIE_SECURE = True
-    # SESSION_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000 # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # If you still have issues, you can try setting these to True in production
 # CSRF_COOKIE_SECURE = True

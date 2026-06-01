@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profil de {{ profile_user.get_full_name|default:profile_user.email }} - Haram{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 md:px-8 py-10 space-y-16">
+    
+    <!-- Profile Header -->
+    <div class="flex flex-col items-center text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div class="w-32 h-32 md:w-44 md:h-44 rounded-full bg-gradient-to-tr from-blue-600 via-blue-400 to-indigo-600 p-[3px] shadow-2xl">
+            <div class="w-full h-full rounded-full bg-[var(--bg-app)] p-[3px]">
+                <div class="w-full h-full rounded-full bg-[var(--bg-surface-alt)] flex items-center justify-center overflow-hidden border border-[var(--border-subtle)]">
+                    {% if profile_user.profile.avatar %}
+                        <img src="{{ profile_user.profile.avatar.url }}" class="w-full h-full object-cover" alt="{{ profile_user.email }}">
+                    {% elif fundraisers.0.beneficiary_image %}
+                        <img src="{{ fundraisers.0.beneficiary_image.url }}" class="w-full h-full object-cover" alt="{{ profile_user.email }}">
+                    {% elif votes.0.organizer_image %}
+                        <img src="{{ votes.0.organizer_image.url }}" class="w-full h-full object-cover" alt="{{ profile_user.email }}">
+                    {% elif profile_user.socialaccount_set.all.0.get_avatar_url %}
+                        <img src="{{ profile_user.socialaccount_set.all.0.get_avatar_url }}" class="w-full h-full object-cover" alt="{{ profile_user.email }}">
+                    {% else %}
+                        <span class="material-icons text-7xl text-[var(--text-muted)]">account_circle</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-2">
+            <h1 class="text-3xl md:text-5xl font-black text-[var(--text-main)] tracking-tighter uppercase flex items-center justify-center gap-2">
+                {{ profile_user.get_full_name|default:profile_user.email|truncatechars:30 }}
+                {% if profile_user.profile.is_verified %}
+                    <span class="material-icons text-blue-500 text-2xl md:text-4xl">verified</span>
+                {% endif %}
+            </h1>
+            {% if profile_user.profile.is_verified %}
+                <p class="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">Organisateur Certifié Haram</p>
+            {% else %}
+                <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em]">Organisateur Haram</p>
+            {% endif %}
+        </div>
+
+        <div class="max-w-2xl mx-auto">
+            <p class="text-[var(--text-muted)] leading-relaxed">
+                {{ profile_user.profile.bio|default:"🎯 Créateur de causes et de sessions de vote sur Haram." }}
+            </p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="flex items-center justify-center gap-12 pt-4">
+            <div class="text-center">
+                <p class="text-2xl font-black text-[var(--text-main)]">{{ fundraisers.count }}</p>
+                <p class="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest">Collectes</p>
+            </div>
+            <div class="w-px h-8 bg-[var(--border-subtle)]"></div>
+            <div class="text-center">
+                <p class="text-2xl font-black text-[var(--text-main)]">{{ votes.count }}</p>
+                <p class="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest">Sessions</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Organizer's Content -->
+    <div class="space-y-16">
+        <!-- Fundraisers -->
+        {% if fundraisers %}
+        <div class="space-y-8">
+            <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-6">
+                <h2 class="text-2xl font-black text-[var(--text-main)] tracking-tighter uppercase">
+                    {% if is_owner %}Toutes mes Collectes{% else %}Collectes Actives{% endif %}
+                </h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for fundraiser in fundraisers %}
+                    {% include "partials/immersive_card.html" with obj=fundraiser image_url=fundraiser.background_media author_image=fundraiser.beneficiary_image badge=fundraiser.get_category_display prefix="Collecté:" title=fundraiser.collected_amount|floatformat:0 subtitle=fundraiser.title stat1_val=fundraiser.get_progress_percentage|floatformat:0 stat1_label="%" stat2_val=fundraiser.completed_transactions_count stat2_label="Dons" author=fundraiser.beneficiary_name time=fundraiser.created_at|timesince link_url=fundraiser.get_absolute_url btn_label="Un Don" %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Votes -->
+        {% if votes %}
+        <div class="space-y-8">
+            <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-6">
+                <h2 class="text-2xl font-black text-[var(--text-main)] tracking-tighter uppercase">
+                    {% if is_owner %}Toutes mes Sessions{% else %}Sessions de Vote{% endif %}
+                </h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for session in votes %}
+                    {% include "partials/immersive_card.html" with obj=session image_url=session.background_image author_image=session.organizer_image badge=session.get_category_display prefix="Prix:" title=session.vote_price|floatformat:0 subtitle=session.title stat1_val=session.choices.count stat1_label="Options" stat2_val=session.total_votes|default:0 stat2_label="Votes" author=session.organizer_name author_prefix="Organisé par" time=session.created_at|timesince link_url=session.get_absolute_url btn_label="Vote" %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not fundraisers and not votes %}
+        <div class="py-20 text-center space-y-4">
+            <span class="material-icons text-6xl text-[var(--border-subtle)]">folder_open</span>
+            <p class="text-[var(--text-muted)] font-bold uppercase tracking-widest text-xs">Aucun contenu public pour le moment</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

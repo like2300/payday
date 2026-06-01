@@ -1,151 +1,343 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Tosounga{% endblock %}</title>
+    <title>{% block title %}Haram{% endblock %} | Solidarité & Scrutin Numérique au Congo</title>
+
+    <meta name="description" content="Haram est la plateforme leader en République du Congo pour la collecte de fonds solidaire et l'organisation de sessions de vote sécurisées. Soutenez des causes locales ou créez votre propre campagne.">
+    <meta name="keywords" content="Haram, Congo, Brazzaville, Collecte de fonds, Vote, Solidarité, Crowdfunding, MoMo, Airtel Money">
+    <meta name="author" content="Haram Team">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{% block og_title %}{% endblock %} Haram - Solidarité & Vote">
+    <meta property="og:description" content="Organisez vos collectes de fonds et sessions de vote en toute sécurité au Congo-Brazzaville.">
+    <meta property="og:image" content="{% block og_image %}{% static 'icons/apple-icon-180x180.png' %}{% endblock %}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:title" content="{% block twitter_title %}{% endblock %} Haram - Solidarité & Vote">
+    <meta property="twitter:description" content="La plateforme de confiance pour vos cagnottes et votes au Congo.">
+    <meta property="twitter:image" content="{% block twitter_image %}{% static 'icons/apple-icon-180x180.png' %}{% endblock %}">
 
     <meta name="theme-color" content="#000000">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-icon-180x180.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
 
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <style>
+        :root {
+            /* Full Palette Definition */
+            --color-deep-twilight-50: #e6e7fe;
+            --color-deep-twilight-100: #cecefd;
+            --color-deep-twilight-200: #9c9efc;
+            --color-deep-twilight-300: #6b6dfa;
+            --color-deep-twilight-400: #393cf9;
+            --color-deep-twilight-500: #080cf7;
+            --color-deep-twilight-600: #0609c6;
+            --color-deep-twilight-700: #050794;
+            --color-deep-twilight-800: #030563;
+            --color-deep-twilight-900: #020231;
+            --color-deep-twilight-950: #010223;
+
+            --color-french-blue-50: #e6f1ff;
+            --color-french-blue-100: #cde2fe;
+            --color-french-blue-200: #9bc5fd;
+            --color-french-blue-300: #68a9fd;
+            --color-french-blue-400: #368cfc;
+            --color-french-blue-500: #046ffb;
+            --color-french-blue-600: #0359c9;
+            --color-french-blue-700: #024397;
+            --color-french-blue-800: #022c64;
+            --color-french-blue-900: #011632;
+            --color-french-blue-950: #011023;
+
+            --color-bright-teal-blue-50: #e5f6ff;
+            --color-bright-teal-blue-100: #ccedff;
+            --color-bright-teal-blue-200: #99dbff;
+            --color-bright-teal-blue-300: #66c9ff;
+            --color-bright-teal-blue-400: #33b8ff;
+            --color-bright-teal-blue-500: #00a6ff;
+            --color-bright-teal-blue-600: #0085cc;
+            --color-bright-teal-blue-700: #006399;
+            --color-bright-teal-blue-800: #004266;
+            --color-bright-teal-blue-900: #002133;
+            --color-bright-teal-blue-950: #001724;
+
+            --color-blue-green-50: #e5f9ff;
+            --color-blue-green-100: #ccf2ff;
+            --color-blue-green-200: #99e6ff;
+            --color-blue-green-300: #66d9ff;
+            --color-blue-green-400: #33ccff;
+            --color-blue-green-500: #00bfff;
+            --color-blue-green-600: #0099cc;
+            --color-blue-green-700: #007399;
+            --color-blue-green-800: #004d66;
+            --color-blue-green-900: #002633;
+            --color-blue-green-950: #001b24;
+
+            --color-turquoise-surf-50: #e5fbff;
+            --color-turquoise-surf-100: #ccf6ff;
+            --color-turquoise-surf-200: #99eeff;
+            --color-turquoise-surf-300: #66e5ff;
+            --color-turquoise-surf-400: #33ddff;
+            --color-turquoise-surf-500: #00d4ff;
+            --color-turquoise-surf-600: #00aacc;
+            --color-turquoise-surf-700: #007f99;
+            --color-turquoise-surf-800: #005566;
+            --color-turquoise-surf-900: #002a33;
+            --color-turquoise-surf-950: #001e24;
+
+            --color-sky-aqua-50: #e9f9fc;
+            --color-sky-aqua-100: #d3f2f8;
+            --color-sky-aqua-200: #a6e5f2;
+            --color-sky-aqua-300: #7ad8eb;
+            --color-sky-aqua-400: #4ecbe4;
+            --color-sky-aqua-500: #21bede;
+            --color-sky-aqua-600: #1b98b1;
+            --color-sky-aqua-700: #147285;
+            --color-sky-aqua-800: #0d4c59;
+            --color-sky-aqua-900: #07262c;
+            --color-sky-aqua-950: #051b1f;
+
+            --color-frosted-blue-50: #e9f9fc;
+            --color-frosted-blue-100: #d2f3f9;
+            --color-frosted-blue-200: #a6e7f2;
+            --color-frosted-blue-300: #79dbec;
+            --color-frosted-blue-400: #4ccfe6;
+            --color-frosted-blue-500: #20c2df;
+            --color-frosted-blue-600: #199cb3;
+            --color-frosted-blue-700: #137586;
+            --color-frosted-blue-800: #0d4e59;
+            --color-frosted-blue-900: #06272d;
+            --color-frosted-blue-950: #041b1f;
+
+            --color-light-cyan-50: #e8f9fc;
+            --color-light-cyan-100: #d2f3f9;
+            --color-light-cyan-200: #a5e6f3;
+            --color-light-cyan-300: #78daed;
+            --color-light-cyan-400: #4acde8;
+            --color-light-cyan-500: #1dc1e2;
+            --color-light-cyan-600: #179ab5;
+            --color-light-cyan-700: #127487;
+            --color-light-cyan-800: #0c4d5a;
+            --color-light-cyan-900: #06272d;
+            --color-light-cyan-950: #041b20;
+
+            /* Semantic Colors - Light */
+            --bg-app: #fafafa;
+            --bg-surface: #ffffff;
+            --bg-surface-alt: #f3f4f6;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent-primary: var(--color-french-blue-500);
+            --accent-hover: var(--color-french-blue-600);
+            --accent-soft: var(--color-french-blue-50);
+            --border-subtle: #e5e7eb;
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(0, 0, 0, 0.06);
+            --glass-shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        .dark {
+            /* Semantic Colors - Dark */
+            --bg-app: var(--color-deep-twilight-950);
+            --bg-surface: var(--color-deep-twilight-900);
+            --bg-surface-alt: var(--color-deep-twilight-800);
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --accent-primary: var(--color-french-blue-400);
+            --accent-hover: var(--color-french-blue-300);
+            --accent-soft: rgba(4, 111, 251, 0.15);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(2, 2, 49, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
         html, body { overflow-x: hidden; width: 100%; }
-        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #ffffff; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--text-muted); opacity: 0.15; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--text-muted); opacity: 0.1; }
 
-        /* Architecture Layout Flexbox */
-        .app-container {
-            display: flex;
-            min-height: 100vh;
-            width: 100vw;
+        .no-scrollbar::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+        .no-scrollbar { 
+            -ms-overflow-style: none !important; 
+            scrollbar-width: none !important; 
         }
 
-        #sidebar {
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
-            width: 280px;
-            background-color: #000000;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-            flex-shrink: 0;
-            height: 100vh;
-            position: sticky;
-            top: 0;
+        /* Layout Flexbox Baseline */
+        .app-container { display: flex; min-height: 100vh; width: 100vw; }
+
+        /* ==========================================
+           NAV DYNAMIQUE PREMIUM (EFFET VERRE HAUTE FIDELITÉ)
+           ========================================== */
+        #top-header {
+            transition: max-width 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                        margin-top 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: max-width, margin-top;
         }
 
-        .sidebar-collapsed { width: 88px !important; }
-        .sidebar-collapsed .nav-label,
-        .sidebar-collapsed .logo-text,
-        .sidebar-collapsed .section-title { display: none; }
-        .sidebar-collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
-        .sidebar-collapsed .nav-icon { font-size: 24px; margin: 0; }
-
-        .main-wrapper {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0; /* Important pour bloquer le débordement des éléments enfants */
+        #nav-container {
+            transition: padding 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                        background-color 0.4s ease,
+                        border-color 0.4s ease,
+                        box-shadow 0.4s ease;
+            /* État de base (Avant scroll) */
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 30px -5px var(--glass-shadow), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
         }
 
-        .top-header {
-            width: 100%;
-            height: 80px;
-            position: sticky;
-            top: 0;
-            background-color: rgba(0, 0, 0, 0.8);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        /* Classes appliquées lors du Scroll (État Rétréci & Collé) */
+        .nav-shrunk {
+            max-width: 900px !important;
+            margin-top: 12px !important;
         }
 
-        .main-content {
-            width: 100%;
-            padding-top: 2.5rem;
+        .nav-shrunk #nav-container {
+            padding-top: 0.6rem !important;
+            padding-bottom: 0.6rem !important;
+            /* Le verre devient plus opaque et l'ombre plus prononcée pour l'ancrer */
+            background: var(--bg-surface) !important;
+            border-color: var(--border-subtle) !important;
+            box-shadow: 0 20px 50px -15px var(--glass-shadow), 0 0 0 1px var(--glass-border) inset !important;
         }
+
+        /* Micro-animation du logo au scroll */
+        .nav-shrunk .brand-text {
+            letter-spacing: -0.05em !important; /* Se resserre légèrement */
+        }
+
+        .main-content { width: 100%; padding-top: 6rem; }
+
+        /* ==========================================
+           SWITCH DARK MODE (AURA LUMINEUSE)
+           ========================================== */
+        .theme-switch {
+            position: relative; width: 52px; height: 28px; border-radius: 9999px;
+            background: rgba(0, 0, 0, 0.06); border: 1px solid rgba(0, 0, 0, 0.08);
+            cursor: pointer; transition: all 0.4s ease;
+        }
+        .dark .theme-switch {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .theme-switch .dot {
+            position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+            background: #fff; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), background 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        .dark .theme-switch .dot {
+            background: #fff;
+            transform: translateX(24px);
+            /* Aura lumineuse en mode sombre */
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+        }
+
+        .theme-switch .dot .material-icons { font-size: 14px; color: #facc15; transition: transform 0.4s ease, opacity 0.2s ease; }
+        .dark .theme-switch .dot .material-icons { color: #171717; transform: rotate(360deg); }
+
+        /* Glass Card global (au cas où) */
+        .glass-card { background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.05); backdrop-filter: blur(12px); }
+        .dark .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
 
         {% block extra_css %}{% endblock %}
     </style>
+
+    <script>
+        // Gestion du flash blanc au chargement
+        if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.addEventListener("DOMContentLoaded", () => document.body.classList.add('dark'));
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
 </head>
-<body class="min-h-screen custom-scrollbar {% block body_class %}{% endblock %} overflow-x-hidden">
+<body class="min-h-screen no-scrollbar {% block body_class %}{% endblock %} overflow-x-hidden transition-colors duration-300">
 
     <div class="app-container">
 
-        {% if not hide_sidebar %}
-        {% block sidebar %}
-        <aside id="sidebar" class="hidden lg:flex fixed left-0 top-0 h-screen w-[280px] z-50 flex-col p-8 border-r border-white/5 bg-black overflow-y-auto custom-scrollbar transition-all duration-300">
-            <div class="flex items-center justify-between mb-12 shrink-0">
-                <a href="{% url 'fundraiser_list' %}" class="logo-text text-2xl font-bold tracking-tight text-white uppercase">Tosounga</a>
-                <button onclick="toggleSidebar()" class="text-gray-500 hover:text-white transition-colors">
-                    <span class="material-icons" id="toggle-icon">menu_open</span>
-                </button>
-            </div>
+        <div class="main-wrapper w-full flex flex-col items-center" id="main-wrapper">
 
-            <nav class="flex-1">
-                <ul class="space-y-4">
-                    <li>
-                        <a href="{% url 'fundraiser_list' %}"
-                           class="nav-item flex items-center gap-4 text-gray-400 hover:text-white transition-colors py-3 px-4 rounded-xl hover:bg-white/5 {% if request.resolver_match.url_name == 'fundraiser_list' and not request.GET.category %}text-white bg-white/10 shadow-lg shadow-white/5{% endif %}">
-                            <span class="material-icons nav-icon">explore</span>
-                            <span class="nav-label font-bold text-sm">Découvrir</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'vote_list' %}"
-                           class="nav-item flex items-center gap-4 text-gray-400 hover:text-white transition-colors py-3 px-4 rounded-xl hover:bg-white/5 {% if request.resolver_match.url_name == 'vote_list' or request.resolver_match.url_name == 'vote_detail' %}text-white bg-white/10 shadow-lg shadow-white/5{% endif %}">
-                            <span class="material-icons nav-icon">how_to_reg</span>
-                            <span class="nav-label font-bold text-sm">Votes</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            {% if user.is_authenticated and user.is_staff %}
-            <div class="pt-8 border-t border-white/5 mt-12 shrink-0">
-                <a href="{% url 'admin:index' %}" class="nav-item flex items-center gap-4 text-gray-400 hover:text-white transition-colors py-3 px-4 rounded-xl hover:bg-white/5 text-sm">
-                    <span class="material-icons nav-icon text-lg">admin_panel_settings</span>
-                    <span class="nav-label font-bold">Administration</span>
-                </a>
-            </div>
-            {% endif %}
-        </aside>
-        {% endblock %}
-        {% endif %}
-
-        <div class="main-wrapper {% if not hide_sidebar %}lg:ml-[280px]{% endif %}" id="main-wrapper">
 
             {% if not hide_sidebar %}
-            <header id="top-header" class="top-header backdrop-blur-md z-40 flex items-center px-6 md:px-8">
-                <div class="flex items-center justify-between w-full gap-8">
-                    <div class="flex items-center gap-4">
-                        <a href="{% url 'fundraiser_list' %}" class="text-xl font-bold tracking-tight text-white uppercase">Tosounga</a>
-                    </div>
-
-                    <div class="flex-1 flex justify-end md:justify-start">
-                        {% block header_content %}
-                        <button onclick="openSearchModal()" class="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-2xl text-gray-400 hover:text-white transition-all border border-white/5">
-                            <span class="material-icons text-xl">search</span>
-                            <span class="text-sm font-medium hidden md:block">Rechercher...</span>
-                        </button>
-                        {% endblock %}
-                    </div>
+            <nav id="top-header" class="fixed top-0 left-0 right-0 z-50 w-full max-w-7xl mx-auto mt-4 px-4 md:px-8">
+                <!-- J'ai retiré les classes de couleur de fond de tailwind pour tout gérer dans le CSS -->
+                <div id="nav-container" class="rounded-[9999px] px-6 py-4 flex justify-between items-center">
 
                     <div class="flex items-center gap-4">
-                        {% if user.is_authenticated and user.is_staff %}
-                         <a href="{% url 'admin:index' %}" class="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                            <span class="material-icons text-xl">admin_panel_settings</span>
+                        <a href="{% url 'fundraiser_list' %}" class="brand-text text-lg font-black tracking-tighter text-[var(--text-main)] uppercase transition-all duration-500">
+                            Haram
                         </a>
-                        {% endif %}
                     </div>
+
+                    <div class="flex items-center gap-3">
+
+
+                        <button id="theme-toggle" class="theme-switch" aria-label="Changer le thème">
+                            <div class="dot">
+                                <span class="material-icons" id="theme-icon">light_mode</span>
+                            </div>
+                        </button>
+                    </div>
+
                 </div>
-            </header>
+            </nav>
             {% endif %}
 
-            <main id="main-content" class="main-content {% block main_class %}{% if not hide_sidebar %}px-6 md:px-8 lg:px-12{% endif %} %}{% endblock %} pb-32 md:pb-12">
+            <main id="main-content" class="main-content no-scrollbar {% block main_class %}{% if not hide_sidebar %}lg:px-8{% endif %} pb-24 md:pb-12{% endblock %}">
                 {% block content %}{% endblock %}
             </main>
 
@@ -154,46 +346,293 @@
         </div>
     </div>
 
-    <style>
-        .glass-navbar {
-            background: rgba(20, 20, 20, 0.6);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-        }
-    </style>
+    <!-- Premium Logout Confirmation Modal -->
+    <div id="logoutModal" class="fixed inset-0 z-[300] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-xl" onclick="closeLogoutModal()"></div>
+        <div class="relative w-full max-w-sm bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-[3rem] p-8 md:p-10 shadow-2xl backdrop-blur-3xl animate-in fade-in zoom-in duration-300 text-center space-y-8">
+            <div class="w-20 h-20 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto">
+                <span class="material-icons text-4xl">logout</span>
+            </div>
+            
+            <div class="space-y-2">
+                <h3 class="text-2xl font-black text-[var(--text-main)] uppercase tracking-tighter">Déconnexion ?</h3>
+                <p class="text-[var(--text-muted)] text-sm font-bold uppercase tracking-wider">Êtes-vous sûr de vouloir quitter votre session ?</p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <form id="globalLogoutForm" method="post" action="{% url 'account_logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full py-4 bg-red-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-red-500/20 hover:scale-[1.02] active:scale-95 transition-all">
+                        Oui, me déconnecter
+                    </button>
+                </form>
+                <button onclick="closeLogoutModal()" class="w-full py-4 bg-[var(--bg-surface-alt)] text-[var(--text-muted)] rounded-2xl font-black uppercase tracking-widest text-[10px] border border-[var(--border-subtle)] hover:bg-[var(--border-subtle)] transition-all">
+                    Annuler
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const sidebar = document.getElementById('sidebar');
-        const toggleIcon = document.getElementById('toggle-icon');
-        const mainWrapper = document.getElementById('main-wrapper');
+        function openLogoutModal() {
+            const modal = document.getElementById('logoutModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
 
-        function toggleSidebar() {
-            const isCollapsed = sidebar.classList.toggle('sidebar-collapsed');
-            if (toggleIcon) toggleIcon.innerText = isCollapsed ? 'menu' : 'menu_open';
-            
-            if (mainWrapper) {
-                if (isCollapsed) {
-                    mainWrapper.classList.remove('lg:ml-[280px]');
-                    mainWrapper.classList.add('lg:ml-[88px]');
+        function closeLogoutModal() {
+            const modal = document.getElementById('logoutModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+        // --- Écouteur de Scroll intelligent ---
+        let lastScrollY = 0;
+        let ticking = false;
+
+        function updateNav() {
+            const nav = document.getElementById("top-header");
+            if (nav) {
+                if (window.scrollY > 40) {
+                    nav.classList.add("nav-shrunk");
                 } else {
-                    mainWrapper.classList.add('lg:ml-[280px]');
-                    mainWrapper.classList.remove('lg:ml-[88px]');
+                    nav.classList.remove("nav-shrunk");
                 }
             }
-            
-            localStorage.setItem('sidebarCollapsed', isCollapsed);
+            ticking = false;
         }
 
-        // Restauration de l'état précédent
-        if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth >= 1024) {
-            if (sidebar) sidebar.classList.add('sidebar-collapsed');
-            if (toggleIcon) toggleIcon.innerText = 'menu';
-            if (mainWrapper) {
-                mainWrapper.classList.remove('lg:ml-[280px]');
-                mainWrapper.classList.add('lg:ml-[88px]');
+        window.addEventListener('scroll', () => {
+            lastScrollY = window.scrollY;
+            if (!ticking) {
+                window.requestAnimationFrame(updateNav);
+                ticking = true;
+            }
+        });
+
+        // --- Logique active du Switch Dark Mode ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const htmlEl = document.documentElement;
+        const bodyEl = document.body;
+
+        function setTheme(isDark) {
+            if (isDark) {
+                htmlEl.classList.add('dark');
+                bodyEl.classList.add('dark');
+                if(themeIcon) themeIcon.textContent = 'dark_mode';
+                document.querySelector('meta[name="theme-color"]').setAttribute('content', '#000000');
+            } else {
+                htmlEl.classList.remove('dark');
+                bodyEl.classList.remove('dark');
+                if(themeIcon) themeIcon.textContent = 'light_mode';
+                document.querySelector('meta[name="theme-color"]').setAttribute('content', '#fafafa');
+            }
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const isCurrentlyDark = htmlEl.classList.contains('dark');
+                setTheme(!isCurrentlyDark);
+            });
+
+            // Synchronisation de l'icône au chargement
+            if (htmlEl.classList.contains('dark') && themeIcon) {
+                themeIcon.textContent = 'dark_mode';
             }
         }
+
+        // --- Système de Partage Premium ---
+        let currentShareUrl = '';
+        let currentShareTitle = '';
+        let currentShareText = '';
+
+        function shareContent(url, title, customText) {
+            currentShareUrl = url.startsWith('http') ? url : window.location.origin + url;
+            currentShareTitle = title || 'Haram';
+            currentShareText = customText || `Découvrez "${currentShareTitle}" sur Haram - La plateforme de solidarité au Congo 🇨🇬`;
+            
+            const shareData = {
+                title: currentShareTitle,
+                text: currentShareText,
+                url: currentShareUrl
+            };
+
+            if (navigator.share) {
+                navigator.share(shareData).catch(() => openGlobalShareModal());
+            } else {
+                openGlobalShareModal();
+            }
+        }
+
+        function openGlobalShareModal() {
+            const modal = document.getElementById('globalShareModal');
+            const waBtn = document.getElementById('globalShareWA');
+            const fbBtn = document.getElementById('globalShareFB');
+            
+            waBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(currentShareText + " " + currentShareUrl)}`;
+            fbBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentShareUrl)}`;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeGlobalShareModal() {
+            const modal = document.getElementById('globalShareModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        function copyGlobalLink() {
+            navigator.clipboard.writeText(currentShareUrl).then(() => {
+                const btn = event.currentTarget;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<span class="material-icons text-sm">done</span> Copié !';
+                setTimeout(() => { btn.innerHTML = originalContent; }, 2000);
+            });
+        }
+
+        function toggleLike(btn, contentTypeId, objectId) {
+            const isAuthenticated = "{{ user.is_authenticated }}" === "True";
+            
+            if (!isAuthenticated) {
+                openLoginModal();
+                return;
+            }
+
+            const icon = btn.querySelector('.material-icons');
+            const countSpan = btn.querySelector('.like-count');
+            
+            // UI optimistic update
+            const isLiking = icon.textContent === 'favorite_border';
+            
+            fetch("{% url 'toggle_like' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: `content_type_id=${contentTypeId}&object_id=${objectId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.action === 'liked') {
+                        icon.textContent = 'favorite';
+                        btn.classList.add('text-red-500');
+                        icon.classList.add('text-red-500');
+                        icon.classList.remove('text-[var(--text-main)]');
+                    } else {
+                        icon.textContent = 'favorite_border';
+                        btn.classList.remove('text-red-500');
+                        icon.classList.remove('text-red-500');
+                        icon.classList.add('text-[var(--text-main)]');
+                    }
+                    if (countSpan) countSpan.textContent = data.likes_count;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function openLoginModal() {
+            const modal = document.getElementById('loginPromptModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            } else {
+                // Fallback if modal doesn't exist yet
+                window.location.href = "{% url 'account_login' %}";
+            }
+        }
+
+        function closeLoginPromptModal() {
+            const modal = document.getElementById('loginPromptModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        // --- Sécurisation des inputs numériques ---
+        document.addEventListener('keydown', function(e) {
+            if (e.target.type === 'number' || e.target.inputMode === 'numeric') {
+                // Bloquer 'e', 'E', '+', '-', '.' (sauf si décimales autorisées, mais ici on veut des entiers pour MoMo)
+                if (['e', 'E', '+', '-'].includes(e.key)) {
+                    e.preventDefault();
+                }
+            }
+        });
     </script>
+    <!-- Global Share Modal -->
+    <div id="globalShareModal" class="fixed inset-0 z-[300] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-xl" onclick="closeGlobalShareModal()"></div>
+        <div class="relative w-full max-w-sm bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-8 overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div class="absolute top-0 right-0 p-6">
+                <button onclick="closeGlobalShareModal()" class="text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+
+            <div class="space-y-8">
+                <div class="text-center space-y-2">
+                    <p class="text-[10px] font-black text-[var(--accent-primary)] uppercase tracking-[0.3em]">Partager</p>
+                    <h2 class="text-2xl font-black text-[var(--text-main)] tracking-tighter uppercase">Inviter vos amis</h2>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- WhatsApp -->
+                    <a id="globalShareWA" href="" target="_blank" class="flex flex-col items-center justify-center gap-3 p-6 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 rounded-[2rem] transition-all hover:scale-105 group">
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-green-500/20">
+                            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.412.001 12.049c0 2.123.554 4.197 1.607 6.037L0 24l6.105-1.602a11.834 11.834 0 005.937 1.57h.005c6.637 0 12.05-5.414 12.053-12.053a11.829 11.829 0 00-3.51-8.513z"/></svg>
+                        </div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-[var(--text-main)]">WhatsApp</span>
+                    </a>
+
+                    <!-- Facebook -->
+                    <a id="globalShareFB" href="" target="_blank" class="flex flex-col items-center justify-center gap-3 p-6 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-600/20 rounded-[2rem] transition-all hover:scale-105 group">
+                        <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
+                            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-[var(--text-main)]">Facebook</span>
+                    </a>
+                </div>
+
+                <button onclick="copyGlobalLink()" class="w-full py-4 bg-[var(--bg-surface-alt)] hover:bg-[var(--border-subtle)] rounded-2xl border border-[var(--border-subtle)] flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-[var(--text-main)] transition-all">
+                    <span class="material-icons text-sm">content_copy</span>
+                    Copier le lien
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Prompt Modal -->
+    <div id="loginPromptModal" class="fixed inset-0 z-[400] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-xl" onclick="closeLoginPromptModal()"></div>
+        <div class="relative w-full max-w-sm bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-10 overflow-hidden shadow-2xl text-center space-y-8 animate-in fade-in zoom-in duration-300">
+            <div class="w-20 h-20 bg-[var(--accent-soft)] rounded-full flex items-center justify-center mx-auto text-[var(--accent-primary)]">
+                <span class="material-icons text-4xl">account_circle</span>
+            </div>
+            
+            <div class="space-y-2">
+                <h2 class="text-2xl font-black text-[var(--text-main)] tracking-tighter uppercase">Connexion Requise</h2>
+                <p class="text-[var(--text-muted)] text-sm font-medium">Connectez-vous pour aimer et soutenir vos causes préférées.</p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <a href="{% url 'account_login' %}" class="w-full py-5 bg-[var(--accent-primary)] text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-[var(--accent-primary)]/20">
+                    Se Connecter
+                </a>
+                <button onclick="closeLoginPromptModal()" class="w-full py-5 bg-[var(--bg-surface-alt)] text-[var(--text-muted)] rounded-2xl font-black uppercase tracking-widest text-[xs] border border-[var(--border-subtle)] hover:bg-[var(--border-subtle)] transition-all">
+                    Plus tard
+                </button>
+            </div>
+        </div>
+    </div>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

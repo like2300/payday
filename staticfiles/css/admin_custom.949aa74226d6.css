@@ -1,0 +1,80 @@
+/* Correctif pour la barre latérale - On laisse django-unfold gérer le layout flexible */
+
+/* Style des inputs, etc. (le reste du fichier demeure inchangé) */
+
+/* Correction pour les champs texte, select et textarea */
+input[type="text"], 
+input[type="number"], 
+input[type="email"], 
+input[type="password"], 
+input[type="url"], 
+input[type="tel"], 
+select, 
+textarea {
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important; /* border-gray-300 */
+    border-radius: 0.5rem !important; /* rounded-lg */
+    padding: 0.5rem 0.75rem !important; /* px-3 py-2 */
+    font-size: 0.875rem !important; /* text-sm */
+    transition: all 0.2s ease !important;
+    color: #111827 !important; /* text-gray-900 */
+    width: 100%;
+    max-width: 600px;
+}
+
+/* Mode sombre */
+.dark input[type="text"], 
+.dark input[type="number"], 
+.dark input[type="email"], 
+.dark input[type="password"], 
+.dark input[type="url"], 
+.dark input[type="tel"], 
+.dark select, 
+.dark textarea {
+    background-color: #1f2937 !important; /* bg-gray-800 */
+    border-color: #374151 !important; /* border-gray-700 */
+    color: #f9fafb !important; /* text-gray-50 */
+}
+
+/* État de focus */
+input:focus, select:focus, textarea:focus {
+    border-color: #6366f1 !important; /* indigo-500 */
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Ajustement spécifique pour les selects */
+select {
+    padding-right: 2rem !important;
+}
+
+/* Style des labels pour plus de clarté */
+.form-row label {
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #6b7280 !important; /* text-gray-500 */
+    margin-bottom: 0.5rem !important;
+    display: block !important;
+}
+
+.dark .form-row label {
+    color: #9ca3af !important; /* text-gray-400 */
+}
+
+/* Correction des lignes de formulaire */
+.form-row {
+    border-bottom: 1px solid #f3f4f6 !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+.dark .form-row {
+    border-color: #374151 !important;
+}
+
+/* Correction pour les champs de recherche dans les listes */
+#changelist-search input[type="text"] {
+    max-width: 400px !important;
+}

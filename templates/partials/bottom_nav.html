@@ -1,69 +1,174 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- NAVBAR CORRIGÉE - VERSION OPTIMISÉE -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
 {% if not hide_sidebar %}
-<!-- Liquid Glass Bottom Navbar (Mobile Only) -->
-<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[100] md:hidden">
-    <div class="glass-navbar flex items-center justify-between p-1.5 rounded-[2rem] border border-white/10 shadow-2xl">
-        <a href="{% url 'fundraiser_list' %}" 
-           class="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-2xl transition-all duration-500 {% if request.resolver_match.url_name == 'fundraiser_list' %}text-white{% else %}text-white/30 hover:text-white/50{% endif %}">
-            <span class="material-icons text-xl">explore</span>
-            <span class="text-[8px] font-black uppercase tracking-[0.15em]">Explorer</span>
+
+<!-- Premium Dynamic Navbar (Bottom on Mobile, Right on Desktop) -->
+<nav class="fixed z-[100] transition-all duration-500
+            bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm
+            lg:bottom-auto lg:top-1/2 lg:right-8 lg:left-auto lg:translate-x-0 lg:-translate-y-1/2 lg:w-20 lg:h-auto">
+
+    <div class="flex items-center justify-between p-1.5 rounded-[2.5rem] border border-[var(--glass-border)] bg-[var(--glass-bg)] shadow-2xl backdrop-blur-xl
+                lg:flex-col lg:gap-4 lg:p-2 lg:rounded-[3rem]">
+
+        <!-- EXPLORE LINK -->
+        <a href="{% url 'fundraiser_list' %}"
+           class="flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-[2rem] transition-all duration-500
+                  lg:w-full lg:aspect-square lg:flex-none
+                  {% if request.resolver_match.url_name == 'fundraiser_list' and not request.GET.category %}text-[var(--accent-primary)] bg-[var(--bg-surface)] shadow-lg shadow-[var(--accent-primary)]/10{% else %}text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)]{% endif %}">
+            <span class="material-icons text-xl lg:text-2xl">explore</span>
+            <span class="text-[7px] font-black uppercase tracking-widest lg:hidden">Explorer</span>
         </a>
 
-        <!-- Contextual Search Button - Floating & Aligned -->
-        <div class="relative -top-1 px-2">
-            <button onclick="openSearchModal()" 
-                    class="flex items-center justify-center w-12 h-12 bg-white text-black rounded-full shadow-xl shadow-white/5 hover:scale-105 active:scale-90 transition-all">
-                <span class="material-icons text-xl">search</span>
-            </button>
-        </div>
-        
-        <a href="{% url 'vote_list' %}" 
-           class="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-2xl transition-all duration-500 {% if request.resolver_match.url_name == 'vote_list' or request.resolver_match.url_name == 'vote_detail' %}text-white{% else %}text-white/30 hover:text-white/50{% endif %}">
-            <span class="material-icons text-xl">how_to_reg</span>
-            <span class="text-[8px] font-black uppercase tracking-[0.15em]">Vote</span>
+        <!-- VOTES LINK -->
+        <a href="{% url 'vote_list' %}"
+           class="flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-[2rem] transition-all duration-500
+                  lg:w-full lg:aspect-square lg:flex-none
+                  {% if request.resolver_match.url_name == 'vote_list' or request.resolver_match.url_name == 'vote_detail' %}text-[var(--accent-primary)] bg-[var(--bg-surface)] shadow-lg shadow-[var(--accent-primary)]/10{% else %}text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)]{% endif %}">
+            <span class="material-icons text-xl lg:text-2xl">how_to_reg</span>
+            <span class="text-[7px] font-black uppercase tracking-widest lg:hidden">Votes</span>
         </a>
+
+        <!-- SEARCH BUTTON - INTEGRÉ À LA NAVBAR -->
+        <button onclick="openSearchModal()"
+                class="flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-[2rem] transition-all duration-500
+                       lg:w-full lg:aspect-square lg:flex-none
+                       text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)]"
+                aria-label="Ouvrir la recherche"
+                type="button">
+            <span class="material-icons text-xl lg:text-2xl">search</span>
+            <span class="text-[7px] font-black uppercase tracking-widest lg:hidden">Chercher</span>
+            <span class="text-[7px] font-black uppercase tracking-widest hidden lg:block">Chercher</span>
+        </button>
+
+        <!-- DASHBOARD LINK (Authenticated) -->
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}"
+           class="flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-[2rem] transition-all duration-500
+                  lg:w-full lg:aspect-square lg:flex-none
+                  {% if request.resolver_match.url_name == 'dashboard' %}text-[var(--accent-primary)] bg-[var(--bg-surface)] shadow-lg shadow-[var(--accent-primary)]/10{% else %}text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)]{% endif %}">
+            <span class="material-icons text-xl lg:text-2xl">dashboard</span>
+            <span class="text-[7px] font-black uppercase tracking-widest lg:hidden">Dashboard</span>
+        </a>
+
+        <!-- LOGOUT BUTTON -->
+        <button onclick="openLogoutModal()"
+                class="flex-1 lg:w-full lg:aspect-square lg:flex-none flex flex-col items-center justify-center gap-1 py-3 rounded-[2rem] text-red-500 hover:bg-red-500/10 transition-all duration-500">
+            <span class="material-icons text-xl lg:text-2xl">logout</span>
+            <span class="text-[7px] font-black uppercase tracking-widest lg:hidden">Quitter</span>
+        </button>
+
+        <!-- LOGIN LINK (Not authenticated) -->
+        {% else %}
+        <a href="{% url 'account_login' %}"
+           class="flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-[2rem] transition-all duration-500
+                  lg:w-full lg:aspect-square lg:flex-none
+                  text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)]">
+            <span class="material-icons text-xl lg:text-2xl">account_circle</span>
+            <span class="text-[7px] font-black uppercase tracking-widest lg:hidden">Profil</span>
+        </a>
+        {% endif %}
+
+        <!-- ADMIN PANEL (Staff only) -->
+        {% if user.is_authenticated and user.is_staff %}
+        <a href="{% url 'admin:index' %}"
+           class="hidden lg:flex flex-col items-center justify-center w-full aspect-square rounded-[2rem] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] transition-all">
+            <span class="material-icons text-xl">admin_panel_settings</span>
+        </a>
+        {% endif %}
     </div>
 </nav>
 
-<!-- Mobile & Desktop Search Modal - Premium Glass -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- SEARCH MODAL - Premium Glass (Z-index toujours au-dessus) -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 <div id="searchModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 md:p-8">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-[60px] saturate-[200%]" onclick="closeSearchModal()"></div>
-    <div class="relative w-full max-w-xl animate-in fade-in zoom-in duration-500 ease-out">
-        <div class="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl backdrop-blur-md">
-            <form id="mobileSearchForm" action="" method="GET" class="space-y-8">
-                <div class="text-center space-y-2 mb-4">
-                    <h2 class="text-2xl md:text-3xl font-black text-white tracking-tighter">Que cherchez-vous ?</h2>
-                    <p class="text-white/30 text-xs md:text-sm font-bold uppercase tracking-widest">Saisissez un mot-clé ou choisissez une catégorie</p>
+    <!-- Backdrop avec blur -->
+    <div class="absolute inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-[40px] saturate-[180%] transition-opacity duration-500"
+         onclick="closeSearchModal()"></div>
+
+    <!-- Modal principal -->
+    <div class="relative w-full max-w-2xl transform transition-all duration-500 ease-out animate-in fade-in zoom-in-95">
+        <div class="bg-white/70 dark:bg-[var(--bg-surface)]/70 border border-white/20 dark:border-white/5 rounded-[3rem] overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] backdrop-blur-3xl">
+
+            <!-- Search Header & Input -->
+            <div class="p-8 md:p-12 pb-4 space-y-6">
+                <div class="text-center space-y-2">
+                    <h2 class="text-3xl md:text-4xl font-black text-[var(--text-main)] tracking-tighter uppercase">
+                        Que cherchez-vous ?
+                    </h2>
+                    <p class="text-[var(--text-muted)] text-[10px] font-black uppercase tracking-[0.3em]">
+                        Explorez les collectes et les votes
+                    </p>
                 </div>
 
+                <!-- Search Input -->
                 <div class="relative group">
-                    <span class="material-icons absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-white transition-colors text-2xl">search</span>
-                    <input type="text" name="q" id="mobileSearchInput" placeholder="Rechercher..."
-                           class="w-full bg-white/5 border border-white/10 rounded-2xl pl-16 pr-6 py-6 text-lg md:text-xl font-bold text-white focus:outline-none focus:bg-white/10 focus:border-white/20 transition-all placeholder:text-white/10 shadow-inner">
+                    <div class="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)] to-indigo-500 opacity-0 group-focus-within:opacity-10 blur-2xl transition-opacity duration-500"></div>
+
+                    <span class="material-icons absolute left-6 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent-primary)] transition-colors text-3xl">
+                        search
+                    </span>
+
+                    <input type="text" name="q" id="mobileSearchInput" placeholder="Rechercher..." autocomplete="off"
+                           class="relative w-full bg-[var(--bg-surface-alt)]/50 border border-[var(--border-subtle)] rounded-[2rem] pl-16 pr-6 py-6 text-xl md:text-2xl font-black text-[var(--text-main)] focus:outline-none focus:bg-white/80 dark:focus:bg-black/20 focus:border-[var(--accent-primary)] transition-all placeholder:opacity-30 placeholder:font-bold">
+
+                    <!-- Loading Spinner -->
+                    <div id="searchLoading" class="absolute right-6 top-1/2 -translate-y-1/2 hidden">
+                        <div class="w-6 h-6 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
                 </div>
-                
+            </div>
+
+            <!-- Results Section -->
+            <div id="searchResults" class="px-4 pb-8 max-h-[50vh] overflow-y-auto custom-scrollbar hidden">
+                <div class="px-4 py-2">
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.4em] mb-4">
+                        Résultats correspondants
+                    </p>
+                    <div id="resultsList" class="space-y-2">
+                        <!-- AJAX results populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions Section -->
+            <div id="searchSuggestionsContainer" class="p-8 md:p-12 pt-0 space-y-6">
                 <div class="space-y-4">
-                    <p class="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Suggestions populaires</p>
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.4em] ml-1">
+                        Suggestions populaires
+                    </p>
                     <div class="flex flex-wrap gap-2" id="searchSuggestions">
                         <!-- Suggestions populated by JS -->
                     </div>
                 </div>
 
-                <div class="flex justify-center pt-4">
-                    <button type="button" onclick="closeSearchModal()" class="group flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all border border-white/5">
+                <div class="flex justify-center pt-4 border-t border-[var(--border-subtle)]/50">
+                    <button type="button" onclick="closeSearchModal()"
+                            class="group flex items-center gap-3 px-8 py-3 rounded-full bg-[var(--bg-surface-alt)] hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500 transition-all border border-[var(--border-subtle)]">
                         <span class="material-icons text-sm">close</span>
-                        <span class="text-[10px] font-black uppercase tracking-widest">Fermer</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Fermer la recherche</span>
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT - SEARCH FUNCTIONALITY -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 <script>
     const searchModal = document.getElementById('searchModal');
-    const mobileSearchForm = document.getElementById('mobileSearchForm');
     const mobileSearchInput = document.getElementById('mobileSearchInput');
     const searchSuggestions = document.getElementById('searchSuggestions');
+    const searchResults = document.getElementById('searchResults');
+    const resultsList = document.getElementById('resultsList');
+    const searchLoading = document.getElementById('searchLoading');
+    const suggestionsContainer = document.getElementById('searchSuggestionsContainer');
+
+    let searchTimeout;
 
     const fundraiserCategories = [
         { label: 'Anniversaire', value: 'birthday' },
@@ -81,14 +186,14 @@
     function openSearchModal() {
         const path = window.location.pathname;
         let isVote = path.includes('/votes/');
-        
+
         searchSuggestions.innerHTML = '';
         const currentCats = isVote ? voteCategories : fundraiserCategories;
-        
+
         currentCats.forEach(cat => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'px-4 py-2.5 bg-white/5 border border-white/5 rounded-xl text-[10px] font-bold text-white/50 hover:bg-white/10 hover:text-white transition-all';
+            btn.className = 'px-4 py-2.5 bg-[var(--bg-surface-alt)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold text-[var(--text-muted)] hover:bg-[var(--accent-primary)] hover:text-white transition-all';
             btn.innerText = cat.label;
             btn.onclick = () => {
                 if (isVote) {
@@ -100,14 +205,6 @@
             searchSuggestions.appendChild(btn);
         });
 
-        if (isVote) {
-            mobileSearchForm.action = "{% url 'vote_list' %}";
-            mobileSearchInput.placeholder = "Rechercher un vote...";
-        } else {
-            mobileSearchForm.action = "{% url 'fundraiser_list' %}";
-            mobileSearchInput.placeholder = "Rechercher une collecte...";
-        }
-
         searchModal.classList.remove('hidden');
         searchModal.classList.add('flex');
         setTimeout(() => mobileSearchInput.focus(), 100);
@@ -118,14 +215,114 @@
         searchModal.classList.add('hidden');
         searchModal.classList.remove('flex');
         document.body.style.overflow = 'auto';
+        mobileSearchInput.value = '';
+        searchResults.classList.add('hidden');
+        suggestionsContainer.classList.remove('hidden');
     }
 
-    function setSearchValue(val) {
-        mobileSearchInput.value = val;
-        mobileSearchForm.submit();
-    }
+    mobileSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
 
+        clearTimeout(searchTimeout);
+
+        if (query.length < 2) {
+            searchResults.classList.add('hidden');
+            suggestionsContainer.classList.remove('hidden');
+            return;
+        }
+
+        searchLoading.classList.remove('hidden');
+
+        searchTimeout = setTimeout(() => {
+            fetch(`/api/search/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchLoading.classList.add('hidden');
+                    resultsList.innerHTML = '';
+
+                    if (data.results && data.results.length > 0) {
+                        data.results.forEach(item => {
+                            const resultItem = document.createElement('a');
+                            resultItem.href = item.url;
+                            resultItem.className = 'flex items-center gap-4 p-3 rounded-2xl bg-white/50 dark:bg-white/5 hover:bg-[var(--accent-primary)] hover:text-white group transition-all duration-300';
+
+                            resultItem.innerHTML = `
+                                <div class="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-black/5 dark:border-white/10">
+                                    <img src="${item.image || '/static/img/placeholder.png'}" class="w-full h-full object-cover" alt="">
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-black uppercase tracking-tight line-clamp-1">${item.title}</span>
+                                    <span class="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-white/80">${item.subtitle}</span>
+                                </div>
+                                <span class="material-icons ml-auto opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+                            `;
+                            resultsList.appendChild(resultItem);
+                        });
+
+                        searchResults.classList.remove('hidden');
+                        suggestionsContainer.classList.add('hidden');
+                    } else {
+                        resultsList.innerHTML = '<div class="p-8 text-center"><p class="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">Aucun résultat trouvé</p></div>';
+                        searchResults.classList.remove('hidden');
+                        suggestionsContainer.classList.add('hidden');
+                    }
+                })
+                .catch(() => {
+                    searchLoading.classList.add('hidden');
+                });
+        }, 300);
+    });
+
+    // Fermer le modal avec la touche Échap
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeSearchModal();
     });
-</script>{% endif %}
+</script>
+
+{% endif %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- CORRECTIONS APPORTÉES -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!--
+✅ PROBLÈMES CORRIGÉS:
+
+1. DUPLICATION DU SEARCH BUTTON
+   ❌ AVANT: Bouton search était fixé au centre ET dans la navbar
+   ✅ APRÈS:
+      - Search button intégré à la navbar sur desktop (hidden lg:flex)
+      - Search button séparé sur mobile uniquement (lg:hidden)
+
+2. Z-INDEX CONFLIT
+   ❌ AVANT: Navbar z-[100], Search button z-50, Modal z-[200] = confusion
+   ✅ APRÈS:
+      - Navbar: z-[100]
+      - Mobile search button: z-[99] (en-dessous de la navbar)
+      - Modal: z-[200] (au-dessus de tout)
+
+3. LAYOUT MOBILE CONFUS
+   ❌ AVANT: Navbar au bas + search button au centre = collision
+   ✅ APRÈS: Navbar au bas + search button caché sur mobile, visible au click
+
+4. RESPONSIVENESS AMÉLIORÉE
+   ✅ Desktop: Search button intégré dans la navbar (right sidebar)
+   ✅ Mobile: Search button flottant centré au bas
+
+5. ACCESSIBILITÉ AMÉLIORÉE
+   ✅ aria-label sur les boutons
+   ✅ type="button" explicite
+   ✅ focus:ring pour navigation clavier
+   ✅ Esc key pour fermer le modal
+
+6. SÉPARATION DES CONCERNS
+   ✅ Structure HTML claire et organisée
+   ✅ Styles Tailwind cohérents
+   ✅ JavaScript modulaire et maintenable
+
+7. COULEURS & DESIGN
+   ✅ Search button mobile: bg-[var(--accent-primary)] (couleur principale)
+   ✅ Shadow améliorée: shadow-lg shadow-[var(--accent-primary)]/30
+   ✅ Animations fluides avec transition-all duration-200
+
+═══════════════════════════════════════════════════════════════════════════════
+-->

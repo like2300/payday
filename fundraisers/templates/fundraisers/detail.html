@@ -1,370 +1,345 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ fundraiser.title }} | PayDay{% endblock %}
+{% block title %}{{ fundraiser.title }} | Haram{% endblock %}
 
-{% block meta_description %}{{ fundraiser.description|truncatewords:20 }}{% endblock %}
-{% block og_title %}{{ fundraiser.title }} | Soutenez cette collecte sur PayDay{% endblock %}
-{% block og_description %}Aidez {{ fundraiser.beneficiary_name }} à atteindre son objectif de {{ fundraiser.target_amount|floatformat:0 }} FCFA.{% endblock %}
-{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{{ fundraiser.background_media.url }}{% endblock %}
-
-{% block body_class %}bg-black text-white selection:bg-white selection:text-black overflow-x-hidden{% endblock %}
+{% block body_class %}bg-[var(--bg-app)] text-[var(--text-main)] selection:bg-[var(--accent-primary)] selection:text-white overflow-x-hidden{% endblock %}
 {% block hide_sidebar %}True{% endblock %}
-{% block main_class %}p-0 m-0 w-full min-h-screen{% endblock %}
+{% block main_class %}p-0 m-0 w-full min-h-screen pb-0{% endblock %}
 
 {% block extra_css %}
-<style>
     /* Override global layout constraints */
     .app-container { display: block !important; }
-    .main-wrapper { display: block !important; width: 100% !important; }
-    .main-content { padding-top: 0 !important; width: 100% !important; margin: 0 !important; }
+    .main-wrapper { display: block !important; width: 100% !important; margin-left: 0 !important; }
+    .main-content { padding-top: 0 !important; width: 100% !important; margin: 0 !important; padding-bottom: 0 !important; }
     #top-header { display: none !important; }
-    
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 4px;
+
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: var(--bg-surface-alt); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 10px; }
+
+    .btn-sapphire {
+        background-color: var(--accent-primary);
+        transition: all 0.3s ease-in-out;
     }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.02);
+    .btn-sapphire:hover {
+        background-color: var(--accent-hover);
+        transform: scale(1.01);
+        box-shadow: 0 4px 15px rgba(5, 127, 250, 0.4);
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
+    .input-field {
+        background-color: var(--bg-surface-alt);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-main);
+        transition: all 0.3s ease-in-out;
     }
-    .animate-fadeIn {
-        animation: fadeIn 0.5s ease-out forwards;
+    .input-field:focus {
+        background-color: var(--bg-surface);
+        border-color: var(--accent-primary);
+        outline: none;
     }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
     }
-</style>
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
 {% endblock %}
 
 {% block content %}
-<!-- Back Button -->
-<a href="{% url 'fundraiser_list' %}" 
-   class="fixed top-8 left-8 z-[60] flex items-center justify-center w-12 h-12 bg-black/50 backdrop-blur-xl border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-all duration-500 group">
-    <span class="material-icons text-xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
-</a>
+<div class="min-h-screen bg-[var(--bg-app)] text-[var(--text-main)]">
+    <div class="w-full flex flex-col lg:flex-row min-h-screen">
 
-<div class="flex flex-wrap min-h-screen">
-    <!-- Image Section (Left on Desktop, Top on Mobile) -->
-    <div class="w-full lg:w-4/12 h-64 lg:h-screen lg:sticky lg:top-0 order-1 lg:order-1 overflow-hidden">
-        {% if fundraiser.media_type == 'video' %}
-            <video autoplay muted loop playsinline class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000">
-                <source src="{{ fundraiser.background_media.url }}" type="video/mp4">
-            </video>
-        {% else %}
-            <img src="{{ fundraiser.background_media.url }}" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" alt="{{ fundraiser.title }}">
-        {% endif %}
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent lg:hidden"></div>
-    </div>
+        <!-- Media Section: Top on Mobile (45vh), Left on Desktop (Full Screen) -->
+        <div class="w-full lg:w-1/2 xl:w-7/12 bg-[var(--accent-soft)] relative overflow-hidden h-[45vh] lg:h-screen lg:sticky lg:top-0">
+            {% if fundraiser.media_type == 'video' %}
+                <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-1000">
+                    <source src="{{ fundraiser.background_media.url }}" type="video/mp4">
+                </video>
+            {% else %}
+                <img src="{{ fundraiser.background_media.url }}" class="absolute inset-0 w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-1000" alt="">
+            {% endif %}
 
-    <!-- Content Section (Right on Desktop, Bottom on Mobile) -->
-    <div class="w-full lg:w-8/12 order-2 lg:order-2 bg-black min-h-screen">
-        <div class="container mx-auto px-6 py-12 lg:p-20">
-            <!-- Navigation -->
-            <nav class="flex justify-between items-center mb-16 lg:mb-24">
-                <a href="{% url 'fundraiser_list' %}" class="text-3xl font-black uppercase tracking-tighter hover:opacity-70 transition-opacity">
-                    Tosounga<span class="opacity-20">.</span>
+            <!-- Floating Back Button -->
+            <div class="absolute top-6 left-6 z-30 flex gap-3">
+                <a href="{% url 'fundraiser_list' %}" class="flex items-center justify-center w-10 h-10 bg-black/20 lg:bg-white/20 backdrop-blur-xl border border-white/10 rounded-full text-white hover:bg-[var(--bg-surface)] hover:text-[var(--accent-primary)] transition-all group">
+                    <span class="material-icons text-xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
                 </a>
-                
-                <button onclick="toggleDonorsSidebar()" class="group flex items-center gap-4 bg-white/5 hover:bg-white/10 px-6 py-3 rounded-full border border-white/5 transition-all">
-                    <span class="material-icons text-white/40 group-hover:text-white text-xl">groups</span>
-                    <span class="text-xs font-black uppercase tracking-[0.2em]">{{ fundraiser.completed_transactions_count }} Donateurs</span>
+                <button onclick="shareContent('{{ request.path }}', '{{ fundraiser.title|escapejs }}')" class="flex items-center justify-center w-10 h-10 bg-black/20 lg:bg-white/20 backdrop-blur-xl border border-white/10 rounded-full text-white hover:bg-[var(--bg-surface)] hover:text-[var(--accent-primary)] transition-all group">
+                    <span class="material-icons text-xl">share</span>
                 </button>
-            </nav>
+            </div>
 
-            <!-- Hero Content -->
-            <header class="max-w-3xl mb-20 animate-fadeIn">
-                <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-8">
-                    <span class="w-2 h-2 rounded-full animate-pulse" style="background-color: {{ fundraiser.button_color }};"></span>
-                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Collecte Active</span>
+
+
+            <!-- Donor Button -->
+            {% if show_donor_list %}
+            <button onclick="toggleDonorsSidebar()" class="absolute bottom-6 left-6 lg:bottom-10 lg:left-10 z-20 bg-[var(--bg-surface)] shadow-2xl px-5 py-3 lg:px-6 lg:py-4 rounded-2xl flex items-center gap-3 lg:gap-4 hover:scale-105 transition-all group border border-[var(--border-subtle)]">
+                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent-primary)]">
+                    <span class="material-icons text-lg lg:text-xl">groups</span>
+                </div>
+                <div class="text-left">
+                    <p class="text-[7px] lg:text-[8px] font-black uppercase tracking-widest text-[var(--text-muted)] leading-none mb-1">Impact</p>
+                    <p class="text-xs lg:text-sm font-black text-[var(--text-main)] leading-none">{{ fundraiser.completed_transactions_count }} Donateurs</p>
+                </div>
+            </button>
+            {% endif %}
+
+            <!-- Gradient Overlays -->
+            <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/40 to-transparent pointer-events-none"></div>
+            <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 lg:from-[var(--accent-primary)]/30 to-transparent pointer-events-none"></div>
+        </div>
+
+        <!-- Content & Form Section: Bottom on Mobile, Right on Desktop (Scrollable) -->
+        <div class="w-full rounded-t-lg lg:w-1/2 xl:w-5/12 p-6 sm:p-12 md:p-16 lg:p-20 flex flex-col bg-[var(--bg-surface)] lg:overflow-y-auto lg:h-screen no-scrollbar">
+            <!-- Navigation & Logo -->
+            <div class="flex justify-between items-center mb-12">
+
+                <a href="{% url 'fundraiser_list' %}" class="text-2xl font-black tracking-tighter text-[var(--accent-primary)] uppercase">
+                    Haram<span class="text-[var(--border-subtle)]">.</span>
+                </a>
+            </div>
+
+            <div class="flex-1 flex flex-col">
+                <!-- Badge -->
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-[var(--accent-soft)] text-[var(--accent-primary)] rounded-full w-fit mb-6">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse"></span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Collecte de Fonds</span>
                 </div>
 
-                <h1 class="text-5xl lg:text-8xl font-black leading-[0.9] tracking-tighter mb-10 uppercase">
+                <!-- Title & Desc -->
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-[var(--text-main)] leading-[1.1] tracking-tighter mb-6 flex items-center gap-3">
                     {{ fundraiser.title }}
+                    {% if fundraiser.is_verified %}
+                        <span class="material-icons text-[var(--accent-primary)] text-2xl lg:text-3xl" title="Officiellement vérifié">verified</span>
+                    {% endif %}
                 </h1>
-                
-                <div class="w-24 h-2 mb-10" style="background-color: {{ fundraiser.button_color }};"></div>
-                
-                <p class="text-xl lg:text-2xl text-white/60 mb-16 leading-relaxed font-medium">
+                <p class="text-[var(--text-muted)] text-base leading-relaxed mb-10">
                     {{ fundraiser.description }}
                 </p>
 
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
-                    <div class="space-y-2">
-                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">Total Collecté</p>
-                        <p class="text-5xl lg:text-6xl font-black">{{ fundraiser.collected_amount|floatformat:0 }}<span class="text-xl opacity-30 ml-2">FCFA</span></p>
+                <!-- Progress Section -->
+                <div class="bg-[var(--bg-surface-alt)] rounded-[2rem] p-8 mb-10 border border-[var(--border-subtle)]">
+                    <div class="flex justify-between items-end mb-6">
+                        <div class="space-y-1">
+                            <p class="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Total Collecté</p>
+                            <p class="text-4xl font-black text-[var(--text-main)]">{{ fundraiser.collected_amount|floatformat:0 }} <span class="text-sm font-bold text-[var(--text-muted)]">XAF</span></p>
+                        </div>
+                        {% if fundraiser.target_amount %}
+                        <div class="text-right">
+                            <p class="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Objectif</p>
+                            <p class="text-2xl font-black text-[var(--text-muted)]">{{ fundraiser.target_amount|floatformat:0 }} <span class="text-xs">XAF</span></p>
+                        </div>
+                        {% endif %}
                     </div>
+
                     {% if fundraiser.target_amount %}
-                    <div class="space-y-2">
-                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">Objectif de {{ fundraiser.beneficiary_name }}</p>
-                        <p class="text-5xl lg:text-6xl font-black opacity-40">{{ fundraiser.target_amount|floatformat:0 }}<span class="text-xl ml-2">FCFA</span></p>
+                    <div class="h-2 w-full bg-[var(--border-subtle)] rounded-full overflow-hidden">
+                        <div class="h-full bg-[var(--accent-primary)] rounded-full transition-all duration-1000 ease-out" style="width: {{ fundraiser.get_progress_percentage }}%"></div>
+                    </div>
+                    <div class="flex justify-between mt-3">
+                        <span class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{{ fundraiser.completed_transactions_count }} Contributeurs</span>
+                        <span class="text-[10px] font-black text-[var(--accent-primary)] uppercase tracking-widest">{{ fundraiser.get_progress_percentage|floatformat:0 }}% atteint</span>
                     </div>
                     {% endif %}
                 </div>
 
-                <!-- Progress Bar -->
-                {% if fundraiser.target_amount %}
-                <div class="mb-20">
-                    <div class="h-1 w-full bg-white/10 mb-4">
-                        <div class="h-full bg-white transition-all duration-1000 ease-in-out" style="width: {{ fundraiser.get_progress_percentage }}%"></div>
-                    </div>
-                    <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
-                        <span>Progression</span>
-                        <span>{{ fundraiser.get_progress_percentage|floatformat:1 }}%</span>
-                    </div>
-                </div>
-                {% endif %}
 
-                <!-- Donation Form Section -->
-                <section id="donation-section" class="scroll-mt-20">
-                    <div class="bg-zinc-900/50 rounded-[48px] p-8 lg:p-16 border border-white/5 backdrop-blur-sm">
-                        {% if fundraiser.is_closed %}
-                            <div class="text-center py-10">
-                                <h3 class="text-3xl font-black uppercase mb-4">Collecte Clôturée</h3>
-                                <p class="text-white/40">Merci à tous ceux qui ont contribué à cette cause.</p>
+
+                <!-- Form -->
+                <div class="w-full mt-4 w-lg gap-4">
+                    {% if fundraiser.is_closed %}
+                        <div class="text-center p-12 bg-[var(--bg-surface-alt)] rounded-[3rem] border-2 border-dashed border-[var(--border-subtle)]">
+                            <span class="material-icons text-6xl text-[var(--border-subtle)] mb-4 animate-float">verified</span>
+                            <h3 class="font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Objectif Atteint</h3>
+                        </div>
+                    {% else %}
+                        <form id="payment-form" class="space-y-5">
+                            {% csrf_token %}
+                            <input type="hidden" name="fundraiser_id" value="{{ fundraiser.id }}">
+
+                            <div class="relative">
+                                <span class="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-bold">XAF</span>
+                                <input class="w-full pl-20 pr-8 py-5 rounded-2xl font-bold input-field text-xl placeholder:opacity-50"
+                                    type="number" name="amount" required min="100" placeholder="Montant du don"
+                                    onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                    inputmode="numeric" />
                             </div>
-                        {% else %}
-                            <h2 class="text-3xl lg:text-4xl font-black uppercase tracking-tighter mb-12">Soutenir {{ fundraiser.beneficiary_name }}</h2>
-                            
-                            <form id="payment-form" class="space-y-8">
-                                {% csrf_token %}
-                                <input type="hidden" name="fundraiser_id" value="{{ fundraiser.id }}">
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div class="space-y-3">
-                                        <label class="text-[10px] font-black uppercase tracking-widest text-white/40 ml-4">Montant (FCFA)</label>
-                                        <input type="number" name="amount" required min="100" placeholder="Min: {{ fundraiser.min_donation_amount|floatformat:0 }}"
-                                               class="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-2xl font-black focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10">
-                                    </div>
-                                    <div class="space-y-3">
-                                        <label class="text-[10px] font-black uppercase tracking-widest text-white/40 ml-4">Opérateur</label>
-                                        <select name="provider" class="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-lg font-bold focus:outline-none focus:border-white/30 transition-all appearance-none">
-                                            <option value="MTN">MTN MoMo</option>
-                                            <option value="AIRTEL">Airtel Money</option>
-                                        </select>
-                                    </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="relative">
+                                    <select name="provider" class="w-full px-6 py-5 rounded-2xl font-bold input-field text-sm appearance-none">
+                                        <option value="MTN">MTN MoMo</option>
+                                        <option value="AIRTEL">Airtel Money</option>
+                                    </select>
+                                    <span class="material-icons absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none">expand_more</span>
                                 </div>
+                                <input class="w-full px-6 py-5 rounded-2xl font-bold input-field text-sm placeholder:opacity-50"
+                                    type="text" name="donor_name" placeholder="Votre nom" />
+                            </div>
 
-                                <div class="space-y-3">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-white/40 ml-4">Votre Nom (Optionnel)</label>
-                                    <input type="text" name="donor_name" placeholder="Anonyme"
-                                           class="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-lg font-bold focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10">
-                                </div>
+                            <textarea name="message" rows="3"
+                                class="w-full px-6 py-5 rounded-2xl font-bold input-field text-sm placeholder:opacity-50"
+                                placeholder="Message d'encouragement (Optionnel)"></textarea>
 
-                                <div class="space-y-3">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-white/40 ml-4">Message d'encouragement</label>
-                                    <textarea name="message" rows="3" placeholder="Laissez un petit mot..."
-                                              class="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-lg font-bold focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10"></textarea>
-                                </div>
+                            <button type="submit" id="submit-btn"
+                                class="w-full py-6 rounded-2xl text-white font-black uppercase tracking-[0.2em] text-sm btn-sapphire flex items-center justify-center gap-3 mt-4">
+                                <span class="material-icons text-xl">favorite</span>
+                                <span>Contribuer</span>
+                            </button>
 
-                                <button type="submit" id="submit-btn"
-                                        style="background-color: {{ fundraiser.button_color }};"
-                                        class="w-full py-8 rounded-[32px] text-white font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300">
-                                    Contribuer maintenant
-                                </button>
-                                
-                                <p class="text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Sécurisé par OpenPay Congo</p>
-                            </form>
-                        {% endif %}
-                    </div>
-                </section>
-            </header>
-
-            <!-- Footer -->
-            <footer class="pt-20 border-t border-white/5 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 flex flex-wrap gap-12">
-                <div>
-                    <span class="text-white/40 block mb-2">Créée le</span>
-                    {{ fundraiser.created_at|date:"d F Y" }}
+                            <p class="mt-6 text-[9px] text-[var(--text-muted)] text-center uppercase tracking-widest font-bold">
+                                Sécurisé par
+                                <a href="#" class="border-b border-[var(--border-subtle)] border-dotted hover:text-[var(--accent-primary)]">
+                                    OpenPay Congo
+                                </a>
+                            </p>
+                        </form>
+                    {% endif %}
                 </div>
-                <div>
-                    <span class="text-white/40 block mb-2">Localisation</span>
-                    Brazzaville, Congo
+            </div>
+
+            <!-- Footer Meta -->
+            <div class="mt-20 pt-8 border-t border-[var(--border-subtle)] flex items-center justify-between text-[8px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">
+                <div class="flex items-center gap-2">
+                    {% if fundraiser.is_verified %}
+                        <span class="material-icons text-xs text-[var(--accent-primary)]">verified_user</span>
+                        <span>Cause vérifiée</span>
+                    {% else %}
+                        <span class="material-icons text-xs opacity-30">security</span>
+                        <span>En cours de vérification</span>
+                    {% endif %}
                 </div>
-                <div class="ml-auto">
-                    &copy; 2026 PayDay. Congo-Brazzaville
-                </div>
-            </footer>
+                <span>&copy; 2026 Haram &bull; Brazzaville</span>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Donors Sidebar -->
-<div id="donors-sidebar" class="fixed inset-y-0 right-0 w-full md:w-[450px] bg-zinc-950 border-l border-white/10 z-[70] transform translate-x-full transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+<div id="donors-sidebar" class="fixed inset-y-0 right-0 w-full md:w-[450px] bg-[var(--bg-surface)] shadow-2xl z-[70] transform translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
     <div class="flex flex-col h-full">
-        <!-- Sidebar Header -->
-        <div class="p-8 lg:p-12 border-b border-white/5">
-            <div class="flex items-center justify-between mb-12">
-                <h3 class="text-3xl font-black uppercase tracking-tighter">Donateurs</h3>
-                <button onclick="toggleDonorsSidebar()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors">
-                    <span class="material-icons text-white/40">close</span>
-                </button>
-            </div>
-
-            <!-- Search -->
-            <div class="relative group">
-                <span class="material-icons absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-white transition-colors">search</span>
-                <input type="text" id="donor-search" placeholder="Rechercher..." 
-                       class="w-full bg-white/5 border border-white/10 rounded-[24px] py-6 pl-16 pr-6 text-lg font-bold focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10">
+        <div class="p-10 border-b border-[var(--border-subtle)] flex items-center justify-between">
+            <h3 class="text-2xl font-black uppercase tracking-tighter text-[var(--text-main)]">Les Donateurs</h3>
+            <button onclick="toggleDonorsSidebar()" class="w-12 h-12 flex items-center justify-center rounded-full bg-[var(--bg-surface-alt)] hover:bg-[var(--bg-app)] text-[var(--text-muted)] transition-colors">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="px-10 pt-6 pb-2">
+            <div class="relative">
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm">search</span>
+                <input type="text" id="donor-search-input" 
+                    placeholder="Rechercher un donateur..." 
+                    class="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-surface-alt)] border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)] transition-all">
             </div>
         </div>
 
-        <!-- Donors List -->
-        <div id="donors-list" class="flex-1 overflow-y-auto custom-scrollbar p-8 lg:p-12 space-y-6">
-            <!-- AJAX Content -->
-            <div class="flex items-center justify-center h-full">
-                <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-            </div>
+        <div id="donors-list" class="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-6">
+             <div class="flex items-center justify-center h-full"><div class="w-8 h-8 border-2 border-[var(--border-subtle)] border-t-[var(--accent-primary)] rounded-full animate-spin"></div></div>
         </div>
-
-        <!-- Pagination -->
-        <div id="pagination-controls" class="p-8 lg:p-12 border-t border-white/5 flex items-center justify-between">
-            <button id="prev-page" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white disabled:opacity-10 transition-colors" disabled>
-                <span class="material-icons text-sm">arrow_back</span> Précédent
-            </button>
-            <span id="current-page-info" class="text-[10px] font-black uppercase tracking-widest text-white/20">
-                Page 1 sur 1
-            </span>
-            <button id="next-page" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white disabled:opacity-10 transition-colors" disabled>
-                Suivant <span class="material-icons text-sm">arrow_forward</span>
-            </button>
+        <div id="pagination-controls" class="p-8 bg-[var(--bg-surface-alt)] flex items-center justify-between">
+            <button id="prev-page" class="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent-primary)] disabled:opacity-30">Précédent</button>
+            <span id="current-page-info" class="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)]/50">Page 1 / 1</span>
+            <button id="next-page" class="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent-primary)] disabled:opacity-30">Suivant</button>
         </div>
     </div>
 </div>
 
 <!-- Sidebar Overlay -->
-<div id="sidebar-overlay" onclick="toggleDonorsSidebar()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[65] hidden opacity-0 transition-all duration-700"></div>
+<div id="sidebar-overlay" onclick="toggleDonorsSidebar()" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[65] hidden opacity-0 transition-all duration-500"></div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
     let currentPage = 1;
-    let currentQuery = '';
     let isSidebarOpen = false;
+    let searchTimeout = null;
 
-    // Toggle Sidebar
     function toggleDonorsSidebar() {
         const sidebar = document.getElementById('donors-sidebar');
         const overlay = document.getElementById('sidebar-overlay');
-        
         isSidebarOpen = !isSidebarOpen;
-        
         if (isSidebarOpen) {
             sidebar.classList.remove('translate-x-full');
             overlay.classList.remove('hidden');
             setTimeout(() => overlay.classList.add('opacity-100'), 10);
-            loadDonors(1, currentQuery);
+            loadDonors(1);
             document.body.style.overflow = 'hidden';
         } else {
             sidebar.classList.add('translate-x-full');
             overlay.classList.remove('opacity-100');
-            setTimeout(() => overlay.classList.add('hidden'), 700);
+            setTimeout(() => overlay.classList.add('hidden'), 500);
             document.body.style.overflow = '';
         }
     }
 
-    // Load Donors via AJAX
-    async function loadDonors(page = 1, query = '') {
+    async function loadDonors(page = 1) {
         const listContainer = document.getElementById('donors-list');
         const prevBtn = document.getElementById('prev-page');
         const nextBtn = document.getElementById('next-page');
         const pageInfo = document.getElementById('current-page-info');
-
-        // Loading state
-        if (page === 1 && !query) {
-             listContainer.innerHTML = '<div class="flex items-center justify-center h-full"><div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div></div>';
-        }
-
+        const searchQuery = document.getElementById('donor-search-input').value;
+        
         try {
-            const response = await fetch(`?q=${query}&page=${page}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+            const response = await fetch(`?page=${page}&q=${encodeURIComponent(searchQuery)}`, { 
+                headers: { 'X-Requested-With': 'XMLHttpRequest' } 
             });
             const data = await response.json();
-
             listContainer.innerHTML = data.html;
             currentPage = data.current_page;
-            
-            // Update controls
             prevBtn.disabled = !data.has_previous;
             nextBtn.disabled = !data.has_next;
-            pageInfo.innerText = `Page ${data.current_page} sur ${data.total_pages}`;
-            
-            // Scroll to top of list
-            listContainer.scrollTop = 0;
+            pageInfo.innerText = `Page ${data.current_page} sur ${data.total_pages || 1}`;
         } catch (error) {
-            console.error('Error loading donors:', error);
-            listContainer.innerHTML = '<p class="text-center text-red-500 font-bold">Erreur de chargement</p>';
+            listContainer.innerHTML = '<p class="text-center text-red-500 text-xs font-black uppercase">Erreur</p>';
         }
     }
 
-    // Search with Debounce
-    let searchTimeout;
-    document.getElementById('donor-search').addEventListener('input', (e) => {
+    // Real-time search with debounce
+    document.getElementById('donor-search-input').addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
-        currentQuery = e.target.value;
         searchTimeout = setTimeout(() => {
-            loadDonors(1, currentQuery);
-        }, 500);
+            loadDonors(1);
+        }, 400); // 400ms delay
     });
 
-    // Pagination Click
-    document.getElementById('prev-page').addEventListener('click', () => {
-        if (currentPage > 1) loadDonors(currentPage - 1, currentQuery);
-    });
-    document.getElementById('next-page').addEventListener('click', () => {
-        loadDonors(currentPage + 1, currentQuery);
-    });
+    document.getElementById('prev-page').addEventListener('click', () => { if (currentPage > 1) loadDonors(currentPage - 1); });
+    document.getElementById('next-page').addEventListener('click', () => { loadDonors(currentPage + 1); });
 
-    // Payment Form Handler
     document.getElementById('payment-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submit-btn');
-        const originalText = btn.innerText;
+        const originalContent = btn.innerHTML;
         btn.disabled = true;
-        btn.innerText = 'TRAITEMENT...';
-
+        btn.innerHTML = '<div class="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>';
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
         try {
             const response = await fetch('{% url "api_initiate_payment" %}', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
                 body: JSON.stringify(data)
             });
-
             const result = await response.json();
             if (result.success) {
                 window.location.href = result.payment_link;
             } else {
-                alert('Erreur: ' + (result.error || 'Une erreur est survenue'));
+                alert(result.error || 'Erreur');
                 btn.disabled = false;
-                btn.innerText = originalText;
+                btn.innerHTML = originalContent;
             }
         } catch (error) {
-            console.error(error);
-            alert('Erreur de connexion au serveur');
+            alert('Erreur de connexion');
             btn.disabled = false;
-            btn.innerText = originalText;
+            btn.innerHTML = originalContent;
         }
     });
 
-    // Airtel Availability Check
-    document.querySelector('select[name="provider"]').addEventListener('change', function() {
-        if (this.value === 'AIRTEL') {
-            alert("Airtel Money sera prochainement disponible. Veuillez utiliser MTN MoMo pour le moment. 😊");
-            this.value = 'MTN';
-        }
-    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isSidebarOpen) toggleDonorsSidebar(); });
 </script>
 {% endblock %}

@@ -1,7 +1,54 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.text import slugify
 from django.urls import reverse
 from django.core.validators import MinValueValidator
+from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
+from .utils import process_image
+
+class Like(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='likes')
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Like"
+        verbose_name_plural = "Likes"
+        unique_together = ('user', 'content_type', 'object_id')
+
+    def __str__(self):
+        return f"Like de {self.user.email} sur {self.content_object}"
+
+class Profile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+    avatar = models.ImageField(upload_to='profiles/avatars/', null=True, blank=True)
+    bio = models.TextField(max_length=500, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    is_verified = models.BooleanField(default=False, verbose_name="Vérifié")
+    
+    def __str__(self):
+        return f"Profil de {self.user.email}"
+
+    class Meta:
+        verbose_name = "Profil Utilisateur"
+        verbose_name_plural = "Profils Utilisateurs"
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
+    else:
+        Profile.objects.create(user=instance)
 
 class Fundraiser(models.Model):
     CATEGORY_CHOICES = [
@@ -15,6 +62,9 @@ class Fundraiser(models.Model):
         ('image', 'Image'),
     ]
     
+    # Ownership
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='fundraisers', null=True, blank=True, verbose_name="Créateur")
+    
     # Basic Information
     title = models.CharField(max_length=200, verbose_name="Titre")
     slug = models.SlugField(unique=True, blank=True)
@@ -22,6 +72,7 @@ class Fundraiser(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='birthday', verbose_name="Catégorie")
     beneficiary_name = models.CharField(max_length=100, verbose_name="Nom du bénéficiaire")
     beneficiary_phone = models.CharField(max_length=20, verbose_name="Téléphone du bénéficiaire")
+    beneficiary_image = models.ImageField(upload_to='fundraisers/beneficiaries/', null=True, blank=True, verbose_name="Photo du bénéficiaire")
     
     # Media
     background_media = models.FileField(upload_to='fundraisers/backgrounds/', verbose_name="Média d'arrière-plan")
@@ -43,10 +94,14 @@ class Fundraiser(models.Model):
     target_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, verbose_name="Objectif (FCFA - Optionnel)")
     collected_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Collecté (FCFA)")
     
+    # Generic relations
+    core_like = GenericRelation(Like, related_query_name='fundraiser_likes')
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True, verbose_name="Actif")
+    is_verified = models.BooleanField(default=False, verbose_name="Vérifié")
     
     class Meta:
         ordering = ['-created_at']
@@ -59,6 +114,24 @@ class Fundraiser(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        
+        # Image processing
+        if self.pk:
+            try:
+                old_instance = Fundraiser.objects.get(pk=self.pk)
+                if self.background_media and self.background_media != old_instance.background_media:
+                    if self.media_type == 'image':
+                        process_image(self.background_media)
+                if self.thumbnail and self.thumbnail != old_instance.thumbnail:
+                    process_image(self.thumbnail)
+            except Fundraiser.DoesNotExist:
+                pass
+        else:
+            if self.background_media and self.media_type == 'image':
+                process_image(self.background_media)
+            if self.thumbnail:
+                process_image(self.thumbnail)
+
         super().save(*args, **kwargs)
         
     def get_absolute_url(self):

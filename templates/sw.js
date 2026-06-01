@@ -1,4 +1,4 @@
-const CACHE_NAME = 'payday-v1';
+const CACHE_NAME = 'haram-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',

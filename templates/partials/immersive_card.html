@@ -1,0 +1,138 @@
+{% load anivpay_sidebar %}
+<div class="group relative flex flex-col bg-[var(--bg-surface)] rounded-none sm:rounded-3xl overflow-hidden border-x-0 sm:border-x border-y border-[var(--border-subtle)] transition-all duration-300">
+    
+    <!-- Instagram Style Header -->
+    <div class="flex items-center justify-between p-3">
+        {% firstof obj.creator.id obj.session.creator.id as profile_user_id %}
+        {% if profile_user_id %}
+            {% url 'user_profile' profile_user_id as profile_link %}
+        {% endif %}
+
+        <div class="flex items-center gap-3">
+            {% if profile_link %}
+            <a href="{{ profile_link }}" class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 via-blue-400 to-indigo-600 p-[2px] hover:scale-110 transition-transform">
+            {% else %}
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 via-blue-400 to-indigo-600 p-[2px]">
+            {% endif %}
+                <div class="w-full h-full rounded-full bg-[var(--bg-surface)] p-[1px]">
+                    {% if author_image %}
+                        <img src="{{ author_image.url|default:author_image }}" loading="lazy" class="w-full h-full rounded-full object-cover" alt="{{ author }}">
+                    {% else %}
+                        <div class="w-full h-full rounded-full bg-[var(--bg-surface-alt)] flex items-center justify-center">
+                            <span class="material-icons text-xs text-[var(--text-muted)]">person</span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% if profile_link %}</a>{% else %}</div>{% endif %}
+            
+            <div class="flex flex-col">
+                {% if profile_link %}
+                <a href="{{ profile_link }}" class="text-xs font-bold text-[var(--text-main)] leading-none hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1">
+                    {{ author|default:"Utilisateur" }}
+                    {% if obj.creator.profile.is_verified or obj.session.creator.profile.is_verified or obj.is_verified %}
+                        <span class="material-icons text-[10px] text-blue-500">verified</span>
+                    {% endif %}
+                </a>
+                {% else %}
+                <span class="text-xs font-bold text-[var(--text-main)] leading-none flex items-center gap-1">
+                    {{ author|default:"Utilisateur" }}
+                    {% if obj.creator.profile.is_verified or obj.session.creator.profile.is_verified or obj.is_verified %}
+                        <span class="material-icons text-[10px] text-blue-500">verified</span>
+                    {% endif %}
+                </span>
+                {% endif %}
+                <span class="text-[9px] text-[var(--text-muted)] leading-none mt-1">{{ time|default:"À l'instant" }}</span>
+            </div>
+        </div>
+        <button class="text-[var(--text-main)]">
+            <span class="material-icons text-sm">more_horiz</span>
+        </button>
+    </div>
+
+    <!-- Main Content Image (1:1 Ratio) -->
+    <a href="{{ link_url }}" class="relative aspect-square block overflow-hidden bg-[var(--bg-surface-alt)]">
+        {% if image_url %}
+            <img alt="{{ title }}" src="{{ image_url.url|default:image_url }}" loading="lazy" class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 {% if obj.is_closed or obj.is_expired or not obj.is_active %}grayscale-[0.5] opacity-80{% endif %}">
+        {% else %}
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="material-icons text-4xl text-[var(--text-muted)] opacity-20">image</span>
+            </div>
+        {% endif %}
+        
+        <!-- Status Overlay -->
+        {% if obj.is_closed or obj.is_expired or obj.is_active == False or obj.session.is_active == False %}
+        <div class="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+            <div class="bg-red-500/90 text-white text-[10px] font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full shadow-2xl border border-white/20 transform -rotate-12">
+                Terminé
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Badge Overlay -->
+        <div class="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
+            {% if badge %}
+            <div class="bg-black/50 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/10">
+                {{ badge }}
+            </div>
+            {% endif %}
+            
+            {% if obj.is_verified %}
+            <div class="bg-blue-500/90 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/20 flex items-center gap-1 shadow-lg">
+                <span class="material-icons text-[12px]">verified</span>
+                Vérifié
+            </div>
+            {% endif %}
+        </div>
+    </a>
+
+    <!-- Engagement Bar -->
+    <div class="p-3 pb-2 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            {% if not hide_like %}
+                {% get_content_type_id obj as ct_id %}
+                {% get_likes_count obj as l_count %}
+                {% has_user_liked obj request.user as user_liked %}
+                <button onclick="toggleLike(this, '{{ ct_id }}', '{{ obj.id }}')" class="flex items-center gap-2 group/like" aria-label="{% if user_liked %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}">
+                    <span class="material-icons text-2xl {% if user_liked %}text-red-500{% else %}text-[var(--text-main)]{% endif %} transition-all group-hover/like:scale-110">
+                        {% if user_liked %}favorite{% else %}favorite_border{% endif %}
+                    </span>
+                    <span class="text-xs font-black text-[var(--text-muted)] group-hover/like:text-[var(--text-main)] transition-colors like-count">
+                        {{ l_count }}
+                    </span>
+                </button>
+            {% endif %}
+            <button onclick="shareContent('{{ share_url|default:link_url|escapejs }}', '{{ share_title|default:title|escapejs }}', '{{ share_text|escapejs }}')" class="text-[var(--text-main)] hover:scale-110 active:scale-90 transition-transform" aria-label="Partager ce contenu">
+                <span class="material-icons text-2xl">send</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Caption & Stats -->
+    <div class="px-3 pb-4 space-y-2">
+        <div class="flex items-center gap-2">
+            <div class="flex -space-x-2">
+                <div class="w-4 h-4 rounded-full border-2 border-[var(--bg-surface)] bg-blue-500"></div>
+                <div class="w-4 h-4 rounded-full border-2 border-[var(--bg-surface)] bg-red-500"></div>
+            </div>
+            <p class="text-[10px] font-bold text-[var(--text-main)]">
+                {% if stat1_val %}{{ stat1_val }} {{ stat1_label|default:"interactions" }}{% endif %}
+                {% if stat2_val %} • {{ stat2_val }} {{ stat2_label }}{% endif %}
+            </p>
+        </div>
+
+        <div class="space-y-1">
+            <p class="text-xs text-[var(--text-main)] leading-snug">
+                <span class="font-bold mr-1">{{ author|default:"Utilisateur" }}</span>
+                <span class="font-medium text-[var(--text-muted)]">{{ prefix }}</span>
+                <span class="font-black">{{ title }}</span>
+            </p>
+            <p class="text-xs text-[var(--text-muted)] line-clamp-2 leading-snug">
+                {{ subtitle }}
+            </p>
+        </div>
+
+        <a href="{{ link_url }}" class="block w-full mt-4 py-2 bg-[#0095F6] hover:bg-[#1877F2] text-white text-xs font-bold text-center rounded-lg transition-all active:scale-[0.98]">
+            {% if btn_label %}{{ btn_label }}{% else %}Voir plus{% endif %}
+        </a>
+    </div>
+</div>

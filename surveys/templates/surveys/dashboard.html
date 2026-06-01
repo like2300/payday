@@ -1,0 +1,500 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tableau de Bord - Haram{% endblock %}
+
+{% block extra_css %}
+    .stat-card {
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent-primary);
+        box-shadow: 0 10px 30px -10px rgba(0, 149, 246, 0.2);
+    }
+    .stat-card.active {
+        background: var(--bg-surface-alt);
+        border-color: var(--accent-primary);
+    }
+    .chart-container {
+        position: relative;
+        height: 250px;
+        width: 100%;
+    }
+    .section-content {
+        display: none;
+    }
+    .section-content.active {
+        display: block;
+        animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 md:px-8 py-10 space-y-12">
+    
+    <!-- Profile Header (Instagram Style) -->
+    <div class="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-20 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <!-- Avatar Section -->
+        <div class="relative group">
+            <div class="w-32 h-32 md:w-44 md:h-44 rounded-full bg-gradient-to-tr from-blue-600 via-blue-400 to-indigo-600 p-[3px] shadow-2xl">
+                <div class="w-full h-full rounded-full bg-[var(--bg-app)] p-[3px]">
+                    <div class="w-full h-full rounded-full bg-[var(--bg-surface-alt)] flex items-center justify-center overflow-hidden border border-[var(--border-subtle)]">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="{{ user.email }}">
+                        {% elif user.socialaccount_set.all.0.get_avatar_url %}
+                            <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="{{ user.email }}">
+                        {% else %}
+
+                            <span class="material-icons text-7xl text-[var(--text-muted)] group-hover:scale-110 transition-transform duration-500">account_circle</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'profile_edit' %}" class="absolute bottom-2 right-2 w-8 h-8 bg-[var(--accent-primary)] rounded-full border-4 border-[var(--bg-app)] flex items-center justify-center text-white shadow-lg hover:scale-110 transition-all">
+                <span class="material-icons text-sm">edit</span>
+            </a>
+        </div>
+
+        <!-- Info & Stats Section -->
+        <div class="flex-1 space-y-8 text-center md:text-left">
+            <div class="flex flex-col md:flex-row md:items-center gap-6">
+                <h1 class="text-2xl md:text-3xl font-light text-[var(--text-main)] tracking-tight">
+                    {{ user.first_name|default:user.email|truncatechars:20 }}
+                </h1>
+                <div class="flex items-center justify-center md:justify-start gap-3">
+                    <a href="{% url 'profile_edit' %}" class="px-6 py-2 bg-[var(--bg-surface-alt)] border border-[var(--border-subtle)] rounded-xl text-xs font-black uppercase tracking-widest text-[var(--text-main)] hover:bg-[var(--border-subtle)] transition-all">
+                        Modifier Profil
+                    </a>
+                    <a href="{% url 'user_profile' user.id %}" class="w-10 h-10 flex items-center justify-center bg-[var(--accent-soft)] text-[var(--accent-primary)] rounded-xl hover:bg-[var(--accent-primary)] hover:text-white transition-all shadow-sm" title="Voir mon profil public">
+                        <span class="material-icons text-lg">visibility</span>
+                    </a>
+                    <button onclick="openLogoutModal()" class="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                        <span class="material-icons text-lg">logout</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="flex justify-center md:justify-start items-center gap-10 md:gap-16">
+                <div class="text-center md:text-left">
+                    <p class="text-lg font-black text-[var(--text-main)]">{{ fundraisers.count }}</p>
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Collectes</p>
+                </div>
+                <div class="text-center md:text-left">
+                    <p class="text-lg font-black text-[var(--text-main)]">{{ votes.count }}</p>
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Sessions</p>
+                </div>
+                <div class="text-center md:text-left">
+                    <p class="text-lg font-black text-[var(--text-main)]">{{ total_balance|floatformat:0 }}</p>
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">FCFA Gains</p>
+                </div>
+            </div>
+
+            <!-- Bio -->
+            <div class="max-w-md">
+                <p class="font-black text-[var(--text-main)] text-sm mb-1 uppercase tracking-tight">{{ user.get_full_name|default:"Membre Haram" }}</p>
+                <p class="text-sm text-[var(--text-muted)] leading-relaxed">
+                    {{ user.profile.bio|default:"🎯 Créateur de causes et de sessions de vote."|linebreaksbr }}<br>
+                    {% if user.profile.phone %}📞 {{ user.profile.phone }}<br>{% endif %}
+                    📍 Congo-Brazzaville
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Header (Premium Responsive Layout) -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-t border-[var(--border-subtle)] pt-12">
+        <div class="space-y-1">
+            <h2 class="text-xl font-black text-[var(--text-main)] uppercase tracking-tighter">Outils de Création</h2>
+            <p class="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Lancez un nouveau projet en un clic</p>
+        </div>
+        <div class="grid grid-cols-2 md:flex gap-4">
+            <a href="{% url 'fundraiser_create' %}" class="flex items-center justify-center gap-3 px-6 py-4 bg-[var(--bg-surface-alt)] border border-[var(--border-subtle)] rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest text-[var(--text-main)] hover:bg-[var(--border-subtle)] transition-all">
+                <span class="material-icons text-base">add_box</span> Collecte
+            </a>
+            <a href="{% url 'vote_create' %}" class="flex items-center justify-center gap-3 px-6 py-4 bg-[var(--accent-primary)] text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-[var(--accent-primary)]/20">
+                <span class="material-icons text-base">how_to_vote</span> Nouveau Vote
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Overview & Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Interactive Cards -->
+        <div class="lg:col-span-1 space-y-6">
+            <div onclick="switchSection('overview')" class="stat-card bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[2.5rem] p-8 space-y-2 shadow-sm active" id="card-overview">
+                <div class="flex justify-between items-start">
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em]">Cagnotte Totale</p>
+                    <span class="material-icons text-[var(--accent-primary)] text-xl">account_balance_wallet</span>
+                </div>
+                <p class="text-4xl font-black text-[var(--text-main)] tracking-tighter">{{ total_balance|floatformat:0 }} <span class="text-sm">FCFA</span></p>
+                <div class="pt-4 mt-4 border-t border-[var(--border-subtle)] flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span class="text-[9px] font-black uppercase text-[var(--text-muted)]">Solde disponible</span>
+                </div>
+            </div>
+
+            <div onclick="switchSection('fundraisers')" class="stat-card bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[2.5rem] p-8 space-y-2 shadow-sm" id="card-fundraisers">
+                <div class="flex justify-between items-start">
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em]">Collectes Actives</p>
+                    <span class="material-icons text-orange-500 text-xl">volunteer_activism</span>
+                </div>
+                <p class="text-4xl font-black text-[var(--text-main)] tracking-tighter">{{ fundraisers.count }}</p>
+                <p class="text-[9px] font-black uppercase text-[var(--text-muted)] pt-2">{{ fundraiser_total|floatformat:0 }} FCFA générés</p>
+            </div>
+
+            <div onclick="switchSection('votes')" class="stat-card bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[2.5rem] p-8 space-y-2 shadow-sm" id="card-votes">
+                <div class="flex justify-between items-start">
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em]">Votes en cours</p>
+                    <span class="material-icons text-purple-500 text-xl">how_to_vote</span>
+                </div>
+                <p class="text-4xl font-black text-[var(--text-main)] tracking-tighter">{{ votes.count }}</p>
+                <p class="text-[9px] font-black uppercase text-[var(--text-muted)] pt-2">{{ vote_total|floatformat:0 }} FCFA générés</p>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="lg:col-span-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-10 flex flex-col justify-center">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h3 class="text-xl font-black text-[var(--text-main)] uppercase tracking-tight" id="chart-title">Répartition des Revenus</h3>
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Statistiques globales</p>
+                </div>
+                <div class="w-10 h-10 rounded-2xl bg-[var(--bg-surface-alt)] flex items-center justify-center">
+                    <span class="material-icons text-[var(--text-muted)]">insights</span>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="dashboardChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Content Sections -->
+    <div id="overview-section" class="section-content active">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Summary Stats -->
+            <div class="space-y-8">
+                <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-6">
+                    <h2 class="text-2xl font-black text-[var(--text-main)] tracking-tighter uppercase">Dernières Activités</h2>
+                </div>
+                <div class="space-y-4">
+                    <div class="p-6 bg-[var(--bg-surface-alt)] rounded-3xl border border-[var(--border-subtle)] flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center">
+                                <span class="material-icons text-lg">monetization_on</span>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-[var(--text-main)] uppercase">Total Collectes</p>
+                                <p class="text-[9px] text-[var(--text-muted)]">Cumul des dons reçus</p>
+                            </div>
+                        </div>
+                        <p class="font-black text-[var(--text-main)]">{{ fundraiser_total|floatformat:0 }} FCFA</p>
+                    </div>
+                    <div class="p-6 bg-[var(--bg-surface-alt)] rounded-3xl border border-[var(--border-subtle)] flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                                <span class="material-icons text-lg">stars</span>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-[var(--text-main)] uppercase">Total Votes</p>
+                                <p class="text-[9px] text-[var(--text-muted)]">Cumul des paiements de vote</p>
+                            </div>
+                        </div>
+                        <p class="font-black text-[var(--text-main)]">{{ vote_total|floatformat:0 }} FCFA</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Withdrawal History -->
+            <div class="space-y-8">
+                <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-6">
+                    <h2 class="text-2xl font-black text-[var(--text-main)] tracking-tighter uppercase">Demandes de Retrait</h2>
+                    <span class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Suivi</span>
+                </div>
+                <div class="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar">
+                    {% for w in withdrawal_requests %}
+                    <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-6 flex items-center justify-between hover:border-[var(--accent-primary)] transition-all">
+                        <div>
+                            <p class="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-1">Réf: {{ w.reference_number }}</p>
+                            <h3 class="font-black text-[var(--text-main)] uppercase tracking-tight">{{ w.amount|floatformat:0 }} FCFA</h3>
+                            <p class="text-[10px] font-bold mt-1 
+                                {% if w.status == 'approved' %}text-green-500
+                                {% elif w.status == 'pending' %}text-yellow-500
+                                {% elif w.status == 'rejected' %}text-red-500
+                                {% else %}text-[var(--text-muted)]{% endif %}">
+                                {{ w.get_status_display }}
+                            </p>
+                        </div>
+                        {% if w.status == 'approved' %}
+                        <a href="{% url 'download_withdrawal_slip' w.id %}" class="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-green-500/20">
+                            <span class="material-icons text-xs">download</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="text-center py-12 text-[var(--text-muted)] font-medium">Aucune demande de retrait.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fundraisers Section -->
+    <div id="fundraisers-section" class="section-content">
+        <div class="space-y-8">
+            <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-6">
+                <h2 class="text-2xl font-black text-[var(--text-main)] tracking-tighter uppercase">Vos Collectes Actives</h2>
+                <span class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{{ fundraisers.count }} Items</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for f in fundraisers %}
+                <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[2rem] overflow-hidden group hover:border-[var(--accent-primary)] transition-all">
+                    <div class="aspect-video relative overflow-hidden bg-[var(--bg-surface-alt)]">
+                        {% if f.background_media %}
+                            <img src="{{ f.background_media.url }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="">
+                        {% endif %}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                        <div class="absolute bottom-4 left-4">
+                            <h4 class="font-black text-white uppercase text-xs tracking-tight">{{ f.title }}</h4>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <p class="text-[8px] font-black text-[var(--text-muted)] uppercase tracking-widest">Récolté</p>
+                                <p class="text-xl font-black text-[var(--text-main)]">{{ f.collected_amount|floatformat:0 }} FCFA</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[8px] font-black text-[var(--text-muted)] uppercase tracking-widest">Objectif</p>
+                                <p class="text-xs font-bold text-[var(--text-muted)]">{{ f.target_amount|default:"--"|floatformat:0 }}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="{% url 'fundraiser_detail' f.slug %}" class="flex-1 text-center py-3 bg-[var(--bg-surface-alt)] rounded-xl text-[9px] font-black uppercase tracking-widest text-[var(--text-main)] hover:bg-[var(--border-subtle)] transition-all">Voir</a>
+                            <a href="{% url 'fundraiser_edit' f.id %}" class="w-10 h-10 flex items-center justify-center bg-[var(--bg-surface-alt)] rounded-xl text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-all">
+                                <span class="material-icons text-sm">edit</span>
+                            </a>
+                            <form action="{% url 'fundraiser_delete' f.id %}" method="post" onsubmit="return confirm('Supprimer cette collecte ?')" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="w-10 h-10 flex items-center justify-center bg-red-500/10 rounded-xl text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                                    <span class="material-icons text-sm">delete</span>
+                                </button>
+                            </form>
+                            {% if f.collected_amount > 0 %}
+                            <a href="{% url 'request_withdrawal' 'fundraiser' f.id %}" class="flex-1 text-center py-3 bg-[var(--text-main)] text-[var(--bg-app)] rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all">Retirer</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full py-20 text-center">
+                    <span class="material-icons text-6xl text-[var(--border-subtle)] mb-4">volunteer_activism</span>
+                    <p class="text-[var(--text-muted)] font-bold uppercase tracking-widest text-xs">Aucune collecte trouvée</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Votes Section -->
+    <div id="votes-section" class="section-content">
+        <div class="space-y-8">
+            <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-6">
+                <h2 class="text-2xl font-black text-[var(--text-main)] tracking-tighter uppercase">Vos Sessions de Vote</h2>
+                <span class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{{ votes.count }} Items</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for v in votes %}
+                <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[2rem] overflow-hidden group hover:border-[var(--accent-primary)] transition-all">
+                    <div class="aspect-video relative overflow-hidden bg-[var(--bg-surface-alt)]">
+                        {% if v.background_image %}
+                            <img src="{{ v.background_image.url }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="">
+                        {% endif %}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                        <div class="absolute bottom-4 left-4">
+                            <h4 class="font-black text-white uppercase text-xs tracking-tight">{{ v.title }}</h4>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <p class="text-[8px] font-black text-[var(--text-muted)] uppercase tracking-widest">Revenus Vote</p>
+                                <p class="text-xl font-black text-[var(--text-main)]">{{ v.total_revenue|default:0|floatformat:0 }} FCFA</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[8px] font-black text-[var(--text-muted)] uppercase tracking-widest">Prix/Vote</p>
+                                <p class="text-xs font-bold text-[var(--text-muted)]">{{ v.vote_price|floatformat:0 }} FCFA</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="{% url 'vote_detail' v.slug %}" class="flex-1 text-center py-3 bg-[var(--bg-surface-alt)] rounded-xl text-[9px] font-black uppercase tracking-widest text-[var(--text-main)] hover:bg-[var(--border-subtle)] transition-all">Détails</a>
+                            <a href="{% url 'vote_edit' v.id %}" class="w-10 h-10 flex items-center justify-center bg-[var(--bg-surface-alt)] rounded-xl text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-all">
+                                <span class="material-icons text-sm">edit</span>
+                            </a>
+                            <form action="{% url 'vote_delete' v.id %}" method="post" onsubmit="return confirm('Supprimer cette session de vote ?')" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="w-10 h-10 flex items-center justify-center bg-red-500/10 rounded-xl text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                                    <span class="material-icons text-sm">delete</span>
+                                </button>
+                            </form>
+                            <a href="{% url 'request_withdrawal' 'vote' v.id %}" class="flex-1 text-center py-3 bg-[var(--text-main)] text-[var(--bg-app)] rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all">Retirer</a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full py-20 text-center">
+                    <span class="material-icons text-6xl text-[var(--border-subtle)] mb-4">how_to_vote</span>
+                    <p class="text-[var(--text-muted)] font-bold uppercase tracking-widest text-xs">Aucune session de vote trouvée</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let chart;
+
+    function initChart(type = 'pie') {
+        const canvas = document.getElementById('dashboardChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        const fTotal = parseFloat("{{ fundraiser_total|default:0 }}");
+        const vTotal = parseFloat("{{ vote_total|default:0 }}");
+        
+        const data = {
+            labels: ['Collectes', 'Votes'],
+            datasets: [{
+                data: [fTotal || 0.1, vTotal || 0.1], // Small values to keep chart visible if 0
+                backgroundColor: ['#f97316', '#a855f7'],
+                borderColor: 'transparent',
+                hoverOffset: 20
+            }]
+        };
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+            type: type,
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: 10 },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#888',
+                            font: { family: 'Inter', weight: 'bold', size: 10 },
+                            padding: 20,
+                            usePointStyle: true,
+                        }
+                    },
+                    tooltip: {
+                        enabled: fTotal > 0 || vTotal > 0
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    function switchSection(section) {
+        // Update Sections
+        document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active'));
+        document.getElementById(section + '-section').classList.add('active');
+
+        // Update Cards
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+        document.getElementById('card-' + section).classList.add('active');
+
+        // Update Chart & Title
+        const title = document.getElementById('chart-title');
+        if (section === 'overview') {
+            title.innerText = "Répartition des Revenus";
+            initChart('pie');
+        } else if (section === 'fundraisers') {
+            title.innerText = "Performance des Collectes";
+            updateChartForSection('fundraisers');
+        } else if (section === 'votes') {
+            title.innerText = "Engagement des Votes";
+            updateChartForSection('votes');
+        }
+    }
+
+    function updateChartForSection(section) {
+        const labels = [];
+        const data = [];
+        const colors = [];
+
+        if (section === 'fundraisers') {
+            {% for f in fundraisers %}
+                labels.push("{{ f.title|truncatechars:10 }}");
+                data.push(parseFloat("{{ f.collected_amount|default:0 }}"));
+                colors.push('#f97316');
+            {% endfor %}
+        } else {
+            {% for v in votes %}
+                labels.push("{{ v.title|truncatechars:10 }}");
+                data.push(parseFloat("{{ v.total_revenue|default:0 }}"));
+                colors.push('#a855f7');
+            {% endfor %}
+        }
+
+        if (labels.length === 0) {
+            labels.push("Aucun projet");
+            data.push(0);
+            colors.push('#eee');
+        }
+
+        if (chart) chart.destroy();
+        const ctx = document.getElementById('dashboardChart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'FCFA',
+                    data: data,
+                    backgroundColor: colors,
+                    borderRadius: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { display: false }, 
+                        ticks: { 
+                            display: data.some(v => v > 0),
+                            font: { size: 8 }
+                        } 
+                    },
+                    x: { grid: { display: false }, ticks: { font: { size: 8, weight: 'bold' } } }
+                }
+            }
+        });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        initChart('pie');
+    });
+</script>
+{% endblock %}

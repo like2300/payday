@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Créer une Collecte - Haram{% endblock %}
+
+{% block extra_css %}
+    :root {
+        --step-active: var(--accent-primary);
+        --step-pending: var(--border-subtle);
+        --step-completed: #10b981;
+    }
+
+    .step-container { display: none; }
+    .step-container.active { display: block; }
+
+    /* Timeline Style */
+    .timeline {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin-bottom: 3rem;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--border-subtle);
+        z-index: 0;
+        transform: translateY(-50%);
+    }
+    .timeline-progress {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        height: 2px;
+        background: var(--accent-primary);
+        z-index: 1;
+        transform: translateY(-50%);
+        transition: width 0.5s ease;
+        width: 0%;
+    }
+    .step-node {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--bg-surface);
+        border: 2px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        font-weight: 800;
+        transition: all 0.3s ease;
+        color: var(--text-muted);
+        position: relative;
+    }
+    .step-node.active {
+        border-color: var(--accent-primary);
+        background: var(--accent-primary);
+        color: white;
+        box-shadow: 0 0 15px rgba(0, 149, 246, 0.3);
+    }
+    .step-node.completed {
+        border-color: var(--step-completed);
+        background: var(--step-completed);
+        color: white;
+    }
+    .step-label {
+        position: absolute;
+        top: 50px;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        white-space: nowrap;
+        color: var(--text-muted);
+    }
+    .step-node.active .step-label { color: var(--text-main); }
+
+    /* Drag & Drop Style */
+    .drop-zone {
+        border: 2px dashed var(--border-subtle);
+        border-radius: 2rem;
+        padding: 3rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--bg-surface-alt);
+        position: relative;
+        overflow: hidden;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+        border-color: var(--accent-primary);
+        background: var(--accent-soft);
+    }
+    .drop-zone input { display: none; }
+    .preview-img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 1.5rem;
+        display: none;
+    }
+
+    /* Form Fields */
+    .form-group { margin-bottom: 1.5rem; }
+    .field-label {
+        display: block;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        margin-left: 1rem;
+    }
+    .input-premium {
+        width: 100%;
+        background: var(--bg-surface-alt);
+        border: 2px solid #e5e7eb;
+        border-radius: 1.25rem;
+        padding: 1.25rem 1.5rem;
+        color: var(--text-main);
+        font-weight: 600;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .dark .input-premium {
+        border-color: #374151;
+    }
+    .input-premium:focus {
+        border-color: var(--accent-primary);
+        background: var(--bg-surface);
+        outline: none;
+        box-shadow: 0 0 0 4px var(--accent-soft);
+        transform: translateY(-2px);
+    }
+
+    .nav-btn {
+        padding: 1.25rem 2.5rem;
+        border-radius: 1.25rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 11px;
+        transition: all 0.3s ease;
+    }
+    .btn-next { background: var(--accent-primary); color: white; }
+    .btn-prev { background: var(--bg-surface-alt); color: var(--text-muted); }
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <div class="text-center mb-16 space-y-4">
+        <h1 class="text-5xl font-black text-[var(--text-main)] tracking-tighter uppercase">
+            {{ title }}
+        </h1>
+        <p class="text-[var(--text-muted)] font-black uppercase tracking-widest text-[10px]">Lancez votre collecte en 4 étapes</p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline px-10">
+        <div class="timeline-progress" id="progress-bar"></div>
+        <div class="step-node active" data-step="1">1 <span class="step-label">Base</span></div>
+        <div class="step-node" data-step="2">2 <span class="step-label">Bénéficiaire</span></div>
+        <div class="step-node" data-step="3">3 <span class="step-label">Média</span></div>
+        <div class="step-node" data-step="4">4 <span class="step-label">Finances</span></div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="multi-step-form" class="mt-20">
+        {% csrf_token %}
+
+        <!-- Step 1: Basic Info -->
+        <div class="step-container active" id="step-1">
+            <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-8 md:p-12 shadow-2xl space-y-8">
+                <div class="form-group">
+                    <label class="field-label">Titre de la Collecte</label>
+                    <input type="text" name="title" class="input-premium" placeholder="Ex: Soutien à la famille Ngolo" required value="{{ form.title.value|default:'' }}">
+                    {{ form.title.errors }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Catégorie</label>
+                    <select name="category" class="input-premium">
+                        {% for val, name in form.fields.category.choices %}
+                            <option value="{{ val }}" {% if form.category.value == val %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Description</label>
+                    <textarea name="description" rows="5" class="input-premium" placeholder="Racontez votre histoire...">{{ form.description.value|default:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Beneficiary Info -->
+        <div class="step-container" id="step-2">
+            <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-8 md:p-12 shadow-2xl space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="form-group">
+                        <label class="field-label">Nom du Bénéficiaire</label>
+                        <input type="text" name="beneficiary_name" class="input-premium" placeholder="Nom complet" value="{{ form.beneficiary_name.value|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Téléphone (Paiement)</label>
+                        <input type="text" name="beneficiary_phone" class="input-premium" placeholder="Ex: 06 666 00 00" value="{{ form.beneficiary_phone.value|default:'' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Photo du Bénéficiaire</label>
+                    <div class="drop-zone" id="beneficiary-drop-zone">
+                        <div class="dz-message space-y-4" {% if form.instance.beneficiary_image %}style="display:none"{% endif %}>
+                            <span class="material-icons text-5xl text-[var(--accent-primary)]">face</span>
+                            <p class="text-xs font-black uppercase tracking-widest">Ajouter la photo</p>
+                        </div>
+                        <input type="file" name="beneficiary_image" id="beneficiary-input" accept="image/*">
+                        <img src="{% if form.instance.beneficiary_image %}{{ form.instance.beneficiary_image.url }}{% endif %}" class="preview-img" id="beneficiary-preview" {% if form.instance.beneficiary_image %}style="display:block"{% endif %}>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Media -->
+        <div class="step-container" id="step-3">
+            <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-8 md:p-12 shadow-2xl space-y-8">
+                <div class="form-group">
+                    <label class="field-label">Type de Média</label>
+                    <select name="media_type" class="input-premium">
+                        {% for val, name in form.fields.media_type.choices %}
+                            <option value="{{ val }}" {% if form.media_type.value == val %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Média d'Arrière-plan</label>
+                    <div class="drop-zone" id="bg-drop-zone">
+                        <div class="dz-message space-y-4" {% if form.instance.background_media %}style="display:none"{% endif %}>
+                            <span class="material-icons text-5xl text-[var(--accent-primary)]">cloud_upload</span>
+                            <p class="text-xs font-black uppercase tracking-widest">Glissez l'image ou la vidéo ici</p>
+                        </div>
+                        <input type="file" name="background_media" id="bg-input">
+                        <img src="{% if form.instance.background_media and form.instance.media_type == 'image' %}{{ form.instance.background_media.url }}{% endif %}" class="preview-img" id="bg-preview" {% if form.instance.background_media and form.instance.media_type == 'image' %}style="display:block"{% endif %}>
+                        <div id="video-preview-msg" class="text-xs font-black text-[var(--accent-primary)] uppercase" style="display:none">Vidéo sélectionnée</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Finances & Rules -->
+        <div class="step-container" id="step-4">
+            <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-8 md:p-12 shadow-2xl space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="form-group">
+                        <label class="field-label">Objectif de la Cagnotte (XAF)</label>
+                        <input type="number" name="target_amount" class="input-premium" placeholder="Optionnel" value="{{ form.target_amount.value|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Montant Minimum (XAF)</label>
+                        <input type="number" name="min_donation_amount" class="input-premium" placeholder="500 par défaut" value="{{ form.min_donation_amount.value|default:'500' }}">
+                    </div>
+                </div>
+
+                <!-- Conditions d'utilisation -->
+                <div class="bg-[var(--bg-surface-alt)] p-6 rounded-[2rem] border border-[var(--border-subtle)] space-y-4">
+                    <h2 class="text-xl font-black text-[var(--text-main)] uppercase tracking-tight flex items-center gap-2">
+                        <span class="material-icons text-orange-500">gavel</span>
+                        Règles & Conditions
+                    </h2>
+                    
+                    <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-4 h-48 overflow-y-auto text-xs space-y-4 custom-scrollbar">
+                        {% for rule in rules %}
+                            <div class="rule-item">
+                                <h3 class="font-black text-[var(--text-main)] uppercase mb-1">{{ rule.title }}</h3>
+                                <div class="text-[var(--text-muted)] leading-relaxed">{{ rule.content|linebreaksbr }}</div>
+                            </div>
+                        {% empty %}
+                            <p class="text-[var(--text-muted)] italic">Aucune règle spécifique définie pour le moment.</p>
+                        {% endfor %}
+                    </div>
+
+                    <label class="flex items-center gap-3 cursor-pointer group mt-4">
+                        <input type="checkbox" id="terms-checkbox" class="w-5 h-5 rounded border-2 border-[var(--border-subtle)] text-[var(--accent-primary)] focus:ring-[var(--accent-soft)] transition-all cursor-pointer">
+                        <span class="text-[10px] font-black uppercase text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors">
+                            J'ai lu et j'accepte les conditions d'utilisation de Haram
+                        </span>
+                    </label>
+                </div>
+                
+                <div class="bg-[var(--bg-surface-alt)] p-8 rounded-[2rem] border border-[var(--border-subtle)] text-center space-y-6">
+                    <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto">
+                        <span class="material-icons text-3xl">verified</span>
+                    </div>
+                    <h2 class="text-2xl font-black text-[var(--text-main)] uppercase tracking-tight">Récapitulatif</h2>
+                    <div class="space-y-3 text-left">
+                        <div class="flex justify-between border-b border-[var(--border-subtle)] pb-2">
+                            <span class="text-[9px] font-black uppercase text-[var(--text-muted)]">Titre</span>
+                            <span class="text-[9px] font-black uppercase text-[var(--text-main)]" id="sum-title">-</span>
+                        </div>
+                        <div class="flex justify-between border-b border-[var(--border-subtle)] pb-2">
+                            <span class="text-[9px] font-black uppercase text-[var(--text-muted)]">Bénéficiaire</span>
+                            <span class="text-[9px] font-black uppercase text-[var(--text-main)]" id="sum-name">-</span>
+                        </div>
+                        <div class="flex justify-between border-b border-[var(--border-subtle)] pb-2">
+                            <span class="text-[9px] font-black uppercase text-[var(--text-muted)]">Objectif</span>
+                            <span class="text-[9px] font-black uppercase text-[var(--text-main)]" id="sum-target">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex justify-between mt-12 px-4">
+            <button type="button" class="nav-btn btn-prev" id="prevBtn" onclick="nextPrev(-1)">Précédent</button>
+            <button type="button" class="nav-btn btn-next" id="nextBtn" onclick="nextPrev(1)">Suivant</button>
+        </div>
+    </form>
+
+    <!-- Back to Dashboard -->
+    <div class="text-center mt-20">
+        <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors text-[10px] font-black uppercase tracking-widest">
+            <span class="material-icons text-sm">arrow_back</span>
+            Retour au tableau de bord
+        </a>
+    </div>
+</div>
+
+<script>
+    let currentStep = 1;
+    const totalSteps = 4;
+
+    function showStep(n) {
+        const steps = document.getElementsByClassName("step-container");
+        steps[n-1].classList.add("active");
+        
+        document.getElementById("prevBtn").style.visibility = (n == 1) ? "hidden" : "visible";
+        if (n == totalSteps) {
+            document.getElementById("nextBtn").innerHTML = "Lancer la Collecte";
+        } else {
+            document.getElementById("nextBtn").innerHTML = "Suivant";
+        }
+
+        updateTimeline(n);
+    }
+
+    function nextPrev(n) {
+        const steps = document.getElementsByClassName("step-container");
+        
+        if (n == 1 && !validateStep()) return false;
+
+        steps[currentStep-1].classList.remove("active");
+        currentStep = currentStep + n;
+
+        if (currentStep > totalSteps) {
+            document.getElementById("multi-step-form").submit();
+            return false;
+        }
+
+        if (currentStep === 4) updateSummary();
+        showStep(currentStep);
+    }
+
+    function validateStep() {
+        if (currentStep === 1) {
+            const title = document.querySelector('input[name="title"]').value;
+            if (!title) { alert("Le titre est obligatoire"); return false; }
+        }
+        if (currentStep === 4) {
+            const checkbox = document.getElementById('terms-checkbox');
+            if (!checkbox.checked) {
+                alert("Vous devez accepter les conditions d'utilisation pour continuer.");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function updateTimeline(n) {
+        const nodes = document.getElementsByClassName("step-node");
+        const progress = document.getElementById("progress-bar");
+        if (progress) progress.style.width = ((n - 1) / (totalSteps - 1) * 100) + "%";
+        for (let i = 0; i < nodes.length; i++) {
+            nodes[i].classList.remove("active", "completed");
+            if (i < n - 1) nodes[i].classList.add("completed");
+            if (i === n - 1) nodes[i].classList.add("active");
+        }
+    }
+
+    function updateSummary() {
+        document.getElementById('sum-title').innerText = document.querySelector('input[name="title"]').value;
+        document.getElementById('sum-name').innerText = document.querySelector('input[name="beneficiary_name"]').value || "Non spécifié";
+        document.getElementById('sum-target').innerText = (document.querySelector('input[name="target_amount"]').value || "Aucun") + " XAF";
+    }
+
+    function setupDragAndDrop(dropZoneId, inputId, previewId) {
+        const dropZone = document.getElementById(dropZoneId);
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        const msg = dropZone.querySelector('.dz-message');
+
+        dropZone.onclick = () => input.click();
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('drag-over');
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                input.files = e.dataTransfer.files;
+                handlePreview(input, preview, msg);
+            }
+        };
+        input.onchange = () => handlePreview(input, preview, msg);
+    }
+
+    function handlePreview(input, preview, msg) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    msg.style.display = 'none';
+                    if (document.getElementById('video-preview-msg')) document.getElementById('video-preview-msg').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                preview.style.display = 'none';
+                msg.style.display = 'none';
+                if (document.getElementById('video-preview-msg')) document.getElementById('video-preview-msg').style.display = 'block';
+            }
+        }
+    }
+
+    setupDragAndDrop('beneficiary-drop-zone', 'beneficiary-input', 'beneficiary-preview');
+    setupDragAndDrop('bg-drop-zone', 'bg-input', 'bg-preview');
+
+    showStep(currentStep);
+</script>
+{% endblock %}

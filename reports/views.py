@@ -16,10 +16,10 @@ def export_transactions_excel(request, fundraiser_id=None):
     if fundraiser_id:
         fundraiser = get_object_or_404(Fundraiser, id=fundraiser_id)
         transactions = Transaction.objects.filter(fundraiser=fundraiser)
-        filename = f"PayDay_{fundraiser.slug}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        filename = f"Haram_{fundraiser.slug}_{datetime.now().strftime('%Y%m%d')}.xlsx"
     else:
         transactions = Transaction.objects.all()
-        filename = f"PayDay_All_Transactions_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        filename = f"Haram_All_Transactions_{datetime.now().strftime('%Y%m%d')}.xlsx"
 
     wb = Workbook()
     ws = wb.active

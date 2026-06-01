@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Modifier le Profil - Haram{% endblock %}
+
+{% block extra_css %}
+    .input-premium {
+        width: 100%;
+        background: var(--bg-surface-alt);
+        border: 2px solid #e5e7eb;
+        border-radius: 1.25rem;
+        padding: 1.25rem 1.75rem;
+        color: var(--text-main);
+        font-size: 15px;
+        font-weight: 600;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .dark .input-premium {
+        border-color: #374151;
+    }
+    .input-premium:focus {
+        border-color: var(--accent-primary);
+        background: var(--bg-surface);
+        outline: none;
+        box-shadow: 0 0 0 4px var(--accent-soft);
+        transform: translateY(-2px);
+    }
+    .input-premium::placeholder {
+        color: var(--text-muted);
+        opacity: 0.5;
+        font-weight: 500;
+    }
+    .field-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+        margin-left: 0.5rem;
+        transition: color 0.3s ease;
+    }
+    .form-group:focus-within .field-label {
+        color: var(--accent-primary);
+    }
+    
+    /* Error styling */
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0 1rem;
+    }
+    .errorlist li {
+        color: #ef4444;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    /* Instagram-Style Avatar Editor */
+    .avatar-wrapper {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        margin: 0 auto;
+    }
+    .avatar-ring {
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #2563eb, #60a5fa, #4f46e5);
+    }
+    .avatar-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: var(--bg-app);
+        padding: 4px;
+        overflow: hidden;
+    }
+    .avatar-image {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--bg-surface-alt);
+        border: 2px solid var(--border-subtle);
+    }
+    .avatar-edit-overlay {
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        cursor: pointer;
+        z-index: 10;
+    }
+    .avatar-wrapper:hover .avatar-edit-overlay {
+        opacity: 1;
+    }
+
+    .form-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: 2.5rem;
+        padding: 2.5rem;
+        box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.05);
+    }
+    @media (min-width: 768px) {
+        .form-card {
+            padding: 4rem;
+        }
+    }
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-16">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-12">
+        <a href="{% url 'dashboard' %}" class="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors group">
+            <span class="material-icons text-xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
+            <span class="text-[10px] font-black uppercase tracking-widest">Dashboard</span>
+        </a>
+        <div class="text-right">
+            <h1 class="text-3xl font-black text-[var(--text-main)] tracking-tighter uppercase leading-none">{{ title }}</h1>
+            <p class="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest mt-1">Édition des informations</p>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-12">
+        {% csrf_token %}
+        
+        <!-- Profile Picture Section -->
+        <div class="text-center space-y-6">
+            <div class="avatar-wrapper">
+                <div class="avatar-ring">
+                    <div class="avatar-inner">
+                        <img id="avatar-preview" 
+                         src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% elif user.socialaccount_set.all.0.get_avatar_url %}{{ user.socialaccount_set.all.0.get_avatar_url }}{% endif %}" 
+                         class="avatar-image" 
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ user.email }}&background=f4f4f5&color=a1a1aa&size=200'">
+                        <div class="avatar-edit-overlay" onclick="document.getElementById('avatar-input').click()">
+                            <span class="material-icons text-white text-3xl">photo_camera</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{ profile_form.avatar }}
+            <p class="text-[10px] font-black uppercase text-[var(--accent-primary)] tracking-widest">Changer la photo</p>
+        </div>
+
+        <!-- Details Card -->
+        <div class="form-card space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div class="form-group space-y-3">
+                    <label class="field-label flex items-center gap-2" for="{{ user_form.first_name.id_for_label }}">
+                        <span class="material-icons text-xs">person_outline</span> Prénom
+                    </label>
+                    {{ user_form.first_name }}
+                    {{ user_form.first_name.errors }}
+                </div>
+                <div class="form-group space-y-3">
+                    <label class="field-label flex items-center gap-2" for="{{ user_form.last_name.id_for_label }}">
+                        <span class="material-icons text-xs">badge</span> Nom
+                    </label>
+                    {{ user_form.last_name }}
+                    {{ user_form.last_name.errors }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div class="form-group space-y-3">
+                    <label class="field-label flex items-center gap-2" for="{{ user_form.email.id_for_label }}">
+                        <span class="material-icons text-xs">mail_outline</span> Adresse Email
+                    </label>
+                    {{ user_form.email }}
+                    {{ user_form.email.errors }}
+                </div>
+                <div class="form-group space-y-3">
+                    <label class="field-label flex items-center gap-2" for="{{ profile_form.phone.id_for_label }}">
+                        <span class="material-icons text-xs">phone_iphone</span> Téléphone
+                    </label>
+                    {{ profile_form.phone }}
+                    {{ profile_form.phone.errors }}
+                </div>
+            </div>
+
+            <div class="form-group space-y-4">
+                <label class="field-label flex items-center gap-2" for="{{ profile_form.bio.id_for_label }}">
+                    <span class="material-icons text-xs">history_edu</span> Bio Personnalisée
+                </label>
+                {{ profile_form.bio }}
+                {{ profile_form.bio.errors }}
+                <div class="flex items-center gap-2 ml-4">
+                    <span class="material-icons text-[10px] text-[var(--accent-primary)]">info</span>
+                    <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Cette bio sera visible sur votre profil public.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col md:flex-row gap-4 pt-4">
+            <button type="submit" class="flex-1 py-6 bg-[var(--text-main)] text-[var(--bg-app)] rounded-[2rem] font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-2xl">
+                Enregistrer les Modifications
+            </button>
+            <a href="{% url 'dashboard' %}" class="flex-1 py-6 bg-[var(--bg-surface-alt)] text-[var(--text-muted)] rounded-[2rem] font-black uppercase tracking-widest text-xs text-center border border-[var(--border-subtle)] hover:bg-[var(--border-subtle)] transition-all">
+                Retour
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function previewFile() {
+        const preview = document.getElementById('avatar-preview');
+        const file = document.getElementById('avatar-input').files[0];
+        const reader = new FileReader();
+
+        reader.onloadend = function () {
+            preview.src = reader.result;
+            preview.style.display = 'block';
+        }
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+{% endblock %}

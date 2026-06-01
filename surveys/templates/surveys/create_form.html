@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Haram{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+    
+    <div class="space-y-4 text-center">
+        <h1 class="text-4xl md:text-5xl font-black text-[var(--text-main)] tracking-tighter uppercase">
+            {{ title }}
+        </h1>
+        <p class="text-[var(--text-muted)] font-bold uppercase tracking-widest text-xs">Remplissez les informations ci-dessous</p>
+    </div>
+
+    <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[3rem] p-8 md:p-12 shadow-2xl">
+        <form method="post" enctype="multipart/form-data" class="space-y-8">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 gap-6">
+                {% for field in form %}
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-4">{{ field.label }}</label>
+                    <div class="relative">
+                        {{ field }}
+                    </div>
+                    {% if field.help_text %}
+                        <p class="text-[9px] text-[var(--text-muted)] ml-4">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p class="text-red-500 text-[10px] font-bold mt-1 ml-4">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if formset %}
+            <div class="space-y-6 pt-6 border-t border-[var(--border-subtle)]">
+                <h2 class="text-xl font-black text-[var(--text-main)] uppercase tracking-tight">Options du Vote (Candidats)</h2>
+                {{ formset.management_form }}
+                <div class="space-y-8">
+                    {% for fs_form in formset %}
+                    <div class="p-6 bg-[var(--bg-surface-alt)] rounded-[2rem] border border-[var(--border-subtle)] space-y-4">
+                        <p class="text-[9px] font-black text-[var(--accent-primary)] uppercase tracking-widest">Option #{{ forloop.counter }}</p>
+                        <div class="grid grid-cols-1 gap-4">
+                            {% for field in fs_form %}
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-tight ml-2">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="pt-6">
+                <button type="submit" class="w-full py-5 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-white rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-blue-500/20 active:scale-95">
+                    Confirmer et Publier
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="text-center">
+        <a href="{% url 'dashboard' %}" class="text-[10px] font-black text-[var(--text-muted)] hover:text-[var(--text-main)] uppercase tracking-[0.2em] transition-colors">
+            Retour au tableau de bord
+        </a>
+    </div>
+</div>
+
+<style>
+    /* Premium input styling */
+    input, textarea, select {
+        width: 100% !important;
+        background-color: var(--bg-surface-alt) !important;
+        border: 1.5px solid var(--border-subtle) !important;
+        border-radius: 1.25rem !important;
+        padding: 1.25rem 1.5rem !important;
+        color: var(--text-main) !important;
+        font-weight: 600 !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    }
+    input:focus, textarea:focus, select:focus {
+        border-color: var(--accent-primary) !important;
+        outline: none !important;
+        background-color: var(--bg-surface) !important;
+        box-shadow: 0 0 0 4px var(--accent-soft) !important;
+        transform: translateY(-2px) !important;
+    }
+    input[type="file"] {
+        padding: 1rem !important;
+        font-size: 11px !important;
+    }
+</style>
+{% endblock %}

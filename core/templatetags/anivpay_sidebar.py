@@ -1,9 +1,30 @@
 from django import template
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from core.models import Fundraiser
+from django.contrib.contenttypes.models import ContentType
+from core.models import Fundraiser, Like
 
 register = template.Library()
+
+@register.simple_tag
+def get_content_type_id(obj):
+    if not obj:
+        return ""
+    return ContentType.objects.get_for_model(obj).id
+
+@register.simple_tag
+def get_likes_count(obj):
+    if not obj:
+        return 0
+    content_type = ContentType.objects.get_for_model(obj)
+    return Like.objects.filter(content_type=content_type, object_id=obj.id).count()
+
+@register.simple_tag
+def has_user_liked(obj, user):
+    if not user.is_authenticated or not obj:
+        return False
+    content_type = ContentType.objects.get_for_model(obj)
+    return Like.objects.filter(content_type=content_type, object_id=obj.id, user=user).exists()
 
 @register.simple_tag(takes_context=True)
 def get_categories_for_sidebar(context):
@@ -64,3 +85,10 @@ def get_categories_for_sidebar(context):
         html.append(item_html)
         
     return mark_safe("".join(html))
+
+@register.filter
+def first_part(value):
+    """Returns the first part of a string split by comma."""
+    if not value:
+        return ""
+    return str(value).split(',')[0]

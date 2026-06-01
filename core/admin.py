@@ -2,8 +2,14 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import path, reverse
 from django.shortcuts import redirect
-from core.models import Fundraiser, Transaction, FundraiserSettings
+from core.models import Fundraiser, Transaction, FundraiserSettings, Profile
 from unfold.admin import ModelAdmin, StackedInline
+
+@admin.register(Profile)
+class ProfileAdmin(ModelAdmin):
+    list_display = ['user', 'phone', 'is_verified']
+    list_filter = ['is_verified']
+    search_fields = ['user__email', 'user__username', 'phone']
 
 class FundraiserSettingsInline(StackedInline):
     model = FundraiserSettings
@@ -12,8 +18,8 @@ class FundraiserSettingsInline(StackedInline):
 
 @admin.register(Fundraiser)
 class FundraiserAdmin(ModelAdmin):
-    list_display = ['title', 'beneficiary_name', 'target_amount', 'collected_amount', 'progress_display', 'view_link', 'is_active', 'created_at']
-    list_filter = ['is_active', 'category', 'created_at']
+    list_display = ['title', 'beneficiary_name', 'target_amount', 'collected_amount', 'progress_display', 'view_link', 'is_active', 'is_verified', 'created_at']
+    list_filter = ['is_active', 'is_verified', 'category', 'created_at']
     search_fields = ['title', 'beneficiary_name', 'slug']
     prepopulated_fields = {'slug': ('title',)}
     inlines = [FundraiserSettingsInline]
@@ -38,7 +44,7 @@ class FundraiserAdmin(ModelAdmin):
             'description': 'Laissez l\'objectif vide pour une collecte libre. Le montant minimum est imposé aux donateurs.'
         }),
         ('Statut', {
-            'fields': ('is_active',)
+            'fields': ('is_active', 'is_verified')
         }),
     )
 
